@@ -15,7 +15,7 @@ Now, just add an entry to your .gitattributes file for each filetype you want to
 
     $ echo "*.csv filter=bigstore" > .gitattributes
 
-After you run this, every time you stage a csv file, it will transparently copy the file to ".git/storage/objects" and will replace the file contents (as stored in git) with an identifier string starting with "bigstore$" and ending with the file's md5 hash.
+After you run this, every time you stage a csv file, it will transparently copy the file to ".git/storage/objects" and will replace the file contents (as stored in git) with an identifier string starting with `bigstore$` and ending with the file's md5 hash.
 
 By default, git-bigstore won't sync to S3, so to do that, just run:
 
@@ -23,15 +23,28 @@ By default, git-bigstore won't sync to S3, so to do that, just run:
 
 This will download all remote files that aren't stored locally, and will upload all local files that aren't stored remotely.
 
-License
--------
+But `git-media` already exists...
+---------------------------------
 
-Licensed under Apache 2.0. See LICENSE for more details.
+I've been using git-media for a few days now, and I've observed that it breaks down because it violates the following guideline in the [Git docs](https://www.kernel.org/pub/software/scm/git/docs/gitattributes.html):
+
+> For best results, clean should not alter its output further if it is run twice ("clean→clean" should be equivalent to "clean"), and multiple smudge commands should not alter clean's output ("smudge→smudge→clean" should be equivalent to "clean"). See the section on merging below.
+
+This made it a bit tough to collaborate with multiple people, since Git would try to clean things that had already been cleaned, and smudge things that had already been smudged. No good!
+
+Also, git-media hasn't been updated in a while. I promise to be a good maintainer!
+
+TODOs
+-----
+
+* Support for alternative storage backends (such as Rackspace Files, Google Cloud Storage, and Dropbox)
+* Better internal code organization
+* ???
 
 Copyright
 ---------
 
 Copyright 2013, Dan Loewenherz <dan@aurora.io>.
 
-Licensed under Apache 2.0. See LICENSE for details.
+Licensed under Apache 2.0. See LICENSE for more details.
 
