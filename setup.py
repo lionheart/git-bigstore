@@ -17,6 +17,7 @@ setup(
     author_email = metadata.__email__,
     packages=[
         'bigstore',
+        'progressbar',
     ],
     scripts=[
         'bin/git-bigstore',

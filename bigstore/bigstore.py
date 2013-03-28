@@ -9,6 +9,17 @@ import re
 import shutil
 import sys
 import tempfile
+import progressbar
+
+def transfer_callback(name):
+    def inner(size, total):
+        widgets = ['{}: '.format(name), progressbar.Percentage(), ' ', progressbar.Bar()]
+        pbar = progressbar.ProgressBar(widgets=widgets, maxval=total).start()
+        pbar.update(size)
+
+        if size == total:
+            pbar.finish()
+    return inner
 
 def sync():
     thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
@@ -44,8 +55,7 @@ def sync():
                         if key.exists():
                             # Download file
                             with open(filename, 'wb') as file:
-                                sys.stderr.write("downloading file: {}\n".format(hexdigest))
-                                key.get_contents_to_file(file)
+                                key.get_contents_to_file(file, cb=transfer_callback(filename))
 
                             g.add(filename)
 
@@ -55,8 +65,7 @@ def sync():
             with open(os.path.join(dirpath, filename)) as file:
                 key = boto.s3.key.Key(bucket, filename)
                 if not key.exists():
-                    sys.stderr.write("uploading file: {}\n".format(filename))
-                    key.set_contents_from_file(file)
+                    key.set_contents_from_file(file, cb=transfer_callback(filename))
 
 def filter_clean():
     thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
