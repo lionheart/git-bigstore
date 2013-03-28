@@ -30,6 +30,10 @@ elif sys.argv[1] == "init":
 
     g.config("filter.bigstore.clean", "git-bigstore filter-clean")
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
+
+    git_directory = g.rev_parse(git_dir=True)
+    destination_folder = os.path.join(git_directory, "bigstore/objects")
+    mkdir_p(destination_folder)
 elif sys.argv[1] == "sync":
     sync()
 elif sys.argv[1] == "filter-clean":

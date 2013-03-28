@@ -19,11 +19,13 @@ from .metadata import (
 from .bigstore import (
     filter_smudge,
     filter_clean,
-    sync
+    sync,
+    mkdir_p
 )
 
 __all__ = [
     '__author__', '__copyright__', '__email__', '__license__',
-    '__maintainer__', '__version__', 'filter_smudge', 'filter_clean', 'sync'
+    '__maintainer__', '__version__', 'filter_smudge', 'filter_clean',
+    'sync', 'mkdir_p'
 ]
 

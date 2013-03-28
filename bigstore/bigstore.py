@@ -11,6 +11,15 @@ import sys
 import tempfile
 import progressbar
 
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc: # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
 def transfer_callback(name):
     def inner(size, total):
         widgets = ['{}: '.format(name), progressbar.Percentage(), ' ', progressbar.Bar()]
@@ -32,7 +41,7 @@ def sync():
     conn = boto.connect_s3(access_key_id, secret_access_key)
     bucket = boto.s3.bucket.Bucket(conn, bucket_name)
     git_directory = g.rev_parse(git_dir=True)
-    destination_folder = os.path.join(git_directory, "storage/objects")
+    destination_folder = os.path.join(git_directory, "bigstore/objects")
 
     lines = g.ls_tree('HEAD', l=True, z=True, r=True).split('\x00')
     for line in lines:
@@ -83,15 +92,6 @@ def filter_clean():
         destination_filename = os.path.join(destination_folder, hexdigest)
         shutil.copy(filename, destination_filename)
         sys.stdout.write("bigfile${}".format(hexdigest))
-
-    def mkdir_p(path):
-        try:
-            os.makedirs(path)
-        except OSError as exc: # Python >2.5
-            if exc.errno == errno.EEXIST and os.path.isdir(path):
-                pass
-            else:
-                raise
 
     file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
     hash = hashlib.md5()
