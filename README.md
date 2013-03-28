@@ -16,7 +16,7 @@ To get started, set up an Amazon S3 bucket to store stuff. Once you have your ac
     Secret Key: XXX
     Bucket Name: my-bucket-name
 
-Well, that was easy! Your Git repository is now prepared to track big files. To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you want to upload CSV files to S3, perform this command in your repository root:
+Well, that was easy! Your Git repository is now prepared to track big files. To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big CSV files to S3, run this command in your repository root:
 
     $ echo "*.csv filter=bigstore" > .gitattributes
 
