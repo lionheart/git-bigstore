@@ -46,6 +46,7 @@ TODOs
 
 * Support for alternative storage backends (such as Rackspace Files, Google Cloud Storage, and Dropbox)
 * Better internal code organization
+* Less painless initialization when working on a team (maybe read credentials from a version-controlled configuration file?)
 * ???
 
 Copyright
