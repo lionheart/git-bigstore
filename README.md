@@ -41,14 +41,6 @@ Also, git-media hasn't been updated in a while. I promise to be a good maintaine
 
 git-annex is another alternative, but it's solving a different problem and its implementation is a bit less dependent on Git itself. As a result, you essentially have to learn a whole new set of commands to work with it. I wanted to create something with as minimal complexity as possible.
 
-TODOs
------
-
-* Support for alternative storage backends (such as Rackspace Files, Google Cloud Storage, and Dropbox)
-* Better internal code organization
-* Less painless initialization when working on a team (maybe read credentials from a version-controlled configuration file?)
-* ???
-
 Copyright
 ---------
 
