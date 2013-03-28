@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# vim: set filetype=python
+
+import sys
+import git
+from bigstore import sync, filter_clean, filter_smudge
+
+def print_help():
+    print """usage: git bigstore init|sync
+
+   init		Set up local repository to sync files
+   sync		Upload local files and download remote ones
+"""
+
+length = len(sys.argv)
+
+if length == 1:
+    print_help()
+elif sys.argv[1] == "init":
+    g = git.Git(".")
+    print "Please enter your S3 Credentials"
+    print ""
+    s3_key = raw_input("Access Key: ")
+    s3_secret = raw_input("Secret Key: ")
+    s3_bucket = raw_input("Bucket Name: ")
+
+    g.config("bigstore.s3.key", s3_key)
+    g.config("bigstore.s3.secret", s3_secret)
+    g.config("bigstore.s3.name", s3_bucket)
+
+    g.config("filter.bigstore.clean", "git-bigstore filter-clean")
+    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
+elif sys.argv[1] == "sync":
+    sync()
+elif sys.argv[1] == "filter-clean":
+    filter_clean()
+elif sys.argv[1] == "filter-smudge":
+    filter_smudge()
+else:
+    print_help()
+

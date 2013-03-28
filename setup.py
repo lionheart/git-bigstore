@@ -18,6 +18,9 @@ setup(
     packages=[
         'bigstore',
     ],
+    scripts=[
+        'bin/git-bigstore',
+    ],
     install_requires=['gitpython==0.3.2.RC1'],
 )
 
