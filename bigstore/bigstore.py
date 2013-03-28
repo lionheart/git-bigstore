@@ -80,14 +80,13 @@ def filter_clean():
     thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
 
     def clean_file(hash, file):
-        sys.stderr.write("cleaning file\n")
         hexdigest = hash.hexdigest()
         filename = file.name
         file.close()
 
         g = Git('.')
         git_directory = g.rev_parse(git_dir=True)
-        destination_folder = os.path.join(git_directory, "storage/objects")
+        destination_folder = os.path.join(git_directory, "bigstore/objects")
         mkdir_p(destination_folder)
         destination_filename = os.path.join(destination_folder, hexdigest)
         shutil.copy(filename, destination_filename)
@@ -105,7 +104,6 @@ def filter_clean():
     if file_length == 40:
         contents = file.read()
         if thirty_two_hex.match(contents):
-            sys.stderr.write("file already cleaned: {}\n".format(contents))
             sys.stdout.write(contents)
             sys.exit(0)
 
@@ -120,11 +118,10 @@ def filter_smudge():
 
     if thirty_two_hex.match(contents):
         _, hexdigest = contents.split('$')
-        source_filename = os.path.join(git_directory, "storage/objects", hexdigest)
+        source_filename = os.path.join(git_directory, "bigstore/objects", hexdigest)
         try:
             file = open(source_filename, 'rb')
         except IOError:
-            sys.stderr.write("couldn't find file, saving placeholder \n")
             sys.stdout.write(contents)
         else:
             for line in file:
