@@ -17,7 +17,7 @@ Now, just add an entry to your .gitattributes file for each filetype you want to
 
 After you run this, every time you stage a csv file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with an identifier string starting with `bigstore$` and ending with the file's md5 hash.
 
-By default, git-bigstore won't sync to S3, so to do that, just run:
+git-bigstore won't automatically sync to S3 after a commit. To perform a sync, just run:
 
     $ git bigstore sync
 
