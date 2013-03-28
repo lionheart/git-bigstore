@@ -13,7 +13,7 @@ import tempfile
 def sync():
     thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
 
-    g = git.Git('.')
+    g = Git('.')
     access_key_id = g.config("bigstore.s3.key")
     secret_access_key = g.config("bigstore.s3.secret")
     bucket_name = g.config("bigstore.s3.bucket")
