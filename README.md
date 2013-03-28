@@ -6,12 +6,17 @@ git-bigstore is an extension to Git that helps you track big files.
 Configuration
 -------------
 
-To get started, set up an Amazon S3 bucket to store stuff. Once you have your access key id and secret access key on hand, and just run the following:
+To get started, set up an Amazon S3 bucket to store stuff. Once you have your access key id and secret access key on hand, run the following:
 
     $ pip install git-bigstore
-    $ git bigstore init # this will prompt you for your S3 credentials
+    $ git bigstore init
+    Please enter your S3 Credentials
 
-Now, just add an entry to your .gitattributes file for each filetype you want to store remotely. E.g.:
+    Access Key: XXX
+    Secret Key: XXX
+    Bucket Name: my-bucket-name
+
+Well, that was easy! Your Git repository is now prepared to track big files. To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you want to upload CSV files to S3, perform this command in your repository root:
 
     $ echo "*.csv filter=bigstore" > .gitattributes
 
