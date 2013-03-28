@@ -16,11 +16,11 @@ To get started, set up an Amazon S3 bucket to store stuff. Once you have your ac
     Secret Key: XXX
     Bucket Name: my-bucket-name
 
-Well, that was easy! Your Git repository is now prepared to track big files. To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big CSV files to S3, run this command in your repository root:
+Well, that was easy! Your Git repository is now prepared to track big files. To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in S3, run this command in your repository root:
 
-    $ echo "*.csv filter=bigstore" > .gitattributes
+    $ echo "*.zip filter=bigstore" > .gitattributes
 
-After you run this, every time you stage a csv file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with an identifier string starting with `bigstore$` and ending with the file's md5 hash.
+After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with an identifier string starting with `bigstore$` and ending with the file's md5 hash.
 
 git-bigstore won't automatically sync to S3 after a commit. To perform a sync, just run:
 
