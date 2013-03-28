@@ -26,7 +26,7 @@ elif sys.argv[1] == "init":
 
     g.config("bigstore.s3.key", s3_key)
     g.config("bigstore.s3.secret", s3_secret)
-    g.config("bigstore.s3.name", s3_bucket)
+    g.config("bigstore.s3.bucket", s3_bucket)
 
     g.config("filter.bigstore.clean", "git-bigstore filter-clean")
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
