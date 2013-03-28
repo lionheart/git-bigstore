@@ -17,11 +17,13 @@ setup(
     author_email = metadata.__email__,
     packages=[
         'bigstore',
-        'progressbar',
     ],
     scripts=[
         'bin/git-bigstore',
     ],
-    install_requires=['gitpython==0.3.2.RC1'],
+    install_requires=[
+        'gitpython==0.3.2.RC1',
+        'progressbar'
+    ],
 )
 
