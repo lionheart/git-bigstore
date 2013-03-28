@@ -34,7 +34,7 @@ This made it a bit tough to collaborate with multiple people, since Git would tr
 
 Also, git-media hasn't been updated in a while. I promise to be a good maintainer!
 
-git-annex is another alternative, but it's solving a different problem and its implementation is a bit less dependent on Git itself. As a result, you essentially have to learn a whole new set of commands to work with it.
+git-annex is another alternative, but it's solving a different problem and its implementation is a bit less dependent on Git itself. As a result, you essentially have to learn a whole new set of commands to work with it. I wanted to create something with as minimal complexity as possible.
 
 TODOs
 -----
