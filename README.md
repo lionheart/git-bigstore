@@ -23,7 +23,7 @@ git-bigstore won't automatically sync to S3 after a commit. To perform a sync, j
 
 This will download all remote files that aren't stored locally, and will upload all local files that aren't stored remotely.
 
-But `git-media` already exists...
+But "INSERT X HERE" already exists...
 ---------------------------------
 
 I've been using git-media for a few days now, and I've observed that it breaks down because it violates the following guideline in the [Git docs](https://www.kernel.org/pub/software/scm/git/docs/gitattributes.html):
@@ -33,6 +33,8 @@ I've been using git-media for a few days now, and I've observed that it breaks d
 This made it a bit tough to collaborate with multiple people, since Git would try to clean things that had already been cleaned, and smudge things that had already been smudged. No good!
 
 Also, git-media hasn't been updated in a while. I promise to be a good maintainer!
+
+git-annex is another alternative, but it's solving a different problem and its implementation is a bit less dependent on Git itself. As a result, you essentially have to learn a whole new set of commands to work with it.
 
 TODOs
 -----
