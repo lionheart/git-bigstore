@@ -44,7 +44,7 @@ git-annex is another alternative, but it's solving a different problem and its i
 Copyright
 ---------
 
-Copyright 2013, Dan Loewenherz <dan@aurora.io>.
+Copyright 2013 Aurora Software LLC <hi@aurora.io>.
 
 Licensed under Apache 2.0. See LICENSE for more details.
 
