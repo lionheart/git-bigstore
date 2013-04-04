@@ -16,6 +16,7 @@ setup(
     author = metadata.__author__,
     author_email = metadata.__email__,
     packages=[
+        'bigstore.backends',
         'bigstore',
     ],
     scripts=[

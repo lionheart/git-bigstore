@@ -4,13 +4,10 @@
 import os
 import sys
 import git
-from bigstore import sync, filter_clean, filter_smudge, mkdir_p, init
+from bigstore import push, pull, filter_clean, filter_smudge, init
 
 def print_help():
-    print """usage: git bigstore init|sync
-
-   init		Set up local repository to sync files
-   sync		Upload local files and download remote ones
+    print """usage: git bigstore push|pull|log|init
 """
 
 length = len(sys.argv)
@@ -19,8 +16,10 @@ if length == 1:
     print_help()
 elif sys.argv[1] == "init":
     init()
-elif sys.argv[1] == "sync":
-    sync()
+elif sys.argv[1] == "push":
+    push()
+elif sys.argv[1] == "pull":
+    pull()
 elif sys.argv[1] == "filter-clean":
     filter_clean()
 elif sys.argv[1] == "filter-smudge":
