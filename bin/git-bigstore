@@ -4,7 +4,7 @@
 import os
 import sys
 import git
-from bigstore import sync, filter_clean, filter_smudge, mkdir_p
+from bigstore import sync, filter_clean, filter_smudge, mkdir_p, init
 
 def print_help():
     print """usage: git bigstore init|sync
@@ -18,23 +18,7 @@ length = len(sys.argv)
 if length == 1:
     print_help()
 elif sys.argv[1] == "init":
-    g = git.Git(".")
-    print "Please enter your S3 Credentials"
-    print ""
-    s3_key = raw_input("Access Key: ")
-    s3_secret = raw_input("Secret Key: ")
-    s3_bucket = raw_input("Bucket Name: ")
-
-    g.config("bigstore.s3.key", s3_key)
-    g.config("bigstore.s3.secret", s3_secret)
-    g.config("bigstore.s3.bucket", s3_bucket)
-
-    g.config("filter.bigstore.clean", "git-bigstore filter-clean")
-    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
-
-    git_directory = g.rev_parse(git_dir=True)
-    destination_folder = os.path.join(git_directory, "bigstore/objects")
-    mkdir_p(destination_folder)
+    init()
 elif sys.argv[1] == "sync":
     sync()
 elif sys.argv[1] == "filter-clean":

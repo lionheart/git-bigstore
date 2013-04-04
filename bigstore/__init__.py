@@ -20,12 +20,13 @@ from .bigstore import (
     filter_smudge,
     filter_clean,
     sync,
-    mkdir_p
+    mkdir_p,
+    init
 )
 
 __all__ = [
     '__author__', '__copyright__', '__email__', '__license__',
     '__maintainer__', '__version__', 'filter_smudge', 'filter_clean',
-    'sync', 'mkdir_p'
+    'sync', 'mkdir_p', 'init'
 ]
 

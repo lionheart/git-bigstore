@@ -11,6 +11,9 @@ import sys
 import tempfile
 import progressbar
 
+thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
+g = Git('.')
+
 def mkdir_p(path):
     try:
         os.makedirs(path)
@@ -31,9 +34,6 @@ def transfer_callback(name):
     return inner
 
 def sync():
-    thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
-
-    g = Git('.')
     access_key_id = g.config("bigstore.s3.key")
     secret_access_key = g.config("bigstore.s3.secret")
     bucket_name = g.config("bigstore.s3.bucket")
@@ -77,14 +77,11 @@ def sync():
                     key.set_contents_from_file(file, cb=transfer_callback(filename))
 
 def filter_clean():
-    thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
-
     def clean_file(hash, file):
         hexdigest = hash.hexdigest()
         filename = file.name
         file.close()
 
-        g = Git('.')
         git_directory = g.rev_parse(git_dir=True)
         destination_folder = os.path.join(git_directory, "bigstore/objects")
         mkdir_p(destination_folder)
@@ -111,9 +108,7 @@ def filter_clean():
 
 def filter_smudge():
     contents = sys.stdin.read()
-    thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
 
-    g = Git('.')
     git_directory = g.rev_parse(git_dir=True)
 
     if thirty_two_hex.match(contents):
@@ -128,3 +123,22 @@ def filter_smudge():
                 sys.stdout.write(line)
     else:
         sys.stdout.write(contents)
+
+def init():
+    print "Please enter your S3 Credentials"
+    print ""
+    s3_key = raw_input("Access Key: ")
+    s3_secret = raw_input("Secret Key: ")
+    s3_bucket = raw_input("Bucket Name: ")
+
+    g.config("bigstore.s3.key", s3_key)
+    g.config("bigstore.s3.secret", s3_secret)
+    g.config("bigstore.s3.bucket", s3_bucket)
+
+    g.config("filter.bigstore.clean", "git-bigstore filter-clean")
+    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
+
+    git_directory = g.rev_parse(git_dir=True)
+    destination_folder = os.path.join(git_directory, "bigstore/objects")
+    mkdir_p(destination_folder)
+
