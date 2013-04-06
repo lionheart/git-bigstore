@@ -72,7 +72,7 @@ def pathnames():
 
 def push():
     try:
-        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote")
+        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
         pass
     else:
@@ -94,14 +94,13 @@ def push():
             if "upload" in entry:
                 break
         else:
-            with open(filename) as file:
-                # upload the file
-                firstline = file.next()
-                if firstline == 'bigstore\n':
-                    _, hash = file.next()[:-1].split('$')
-                else:
-                    continue
+            firstline, secondline = g.show(sha).split('\n')
+            if firstline == 'bigstore\n':
+                _, hash = secondline.split("$")
+            else:
+                continue
 
+            sys.stderr.write("{} {}\n".format(sha, filename))
             if not backend.exists(hash):
                 with open(object_filename(hash)) as file:
                     backend.push(file, hash)
@@ -128,7 +127,7 @@ def filter_clean():
     else:
         hexdigest = hash.hexdigest()
         mkdir_p(object_directory)
-        shutil.copy(file, object_filename(hexdigest))
+        shutil.copy(file.name, object_filename(hexdigest))
 
         sys.stdout.write("bigstore\n")
         sys.stdout.write("md5${}".format(hexdigest))
