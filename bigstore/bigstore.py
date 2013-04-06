@@ -21,9 +21,10 @@ thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
 attribute_regex = re.compile(r'(^[^\s]*)')
 g = git.Git('.')
 git_directory = g.rev_parse(git_dir=True)
+object_directory = os.path.join(git_directory, "bigstore", "objects")
 
 def object_filename(hash):
-    return os.path.join(git_directory, "bigstore/objects", hash)
+    return os.path.join(object_directory, hash)
 
 def mkdir_p(path):
     try:
@@ -71,11 +72,13 @@ def pathnames():
 
 def push():
     try:
-        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote")
+        # g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote")
+        pass
     except git.exc.GitCommandError:
         pass
     else:
-        g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+        # g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+        pass
 
     access_key_id = g.config("bigstore.s3.key")
     secret_access_key = g.config("bigstore.s3.secret")
@@ -95,8 +98,9 @@ def push():
         else:
             with open(filename) as file:
                 # upload the file
-                if file.next() == 'bigstore':
-                    _, hash = file.next().split('$')
+                firstline = file.next()
+                if firstline == 'bigstore\n':
+                    _, hash = file.next()[:-1].split('$')
                 else:
                     continue
 
@@ -104,7 +108,7 @@ def push():
                 with open(object_filename(hash)) as file:
                     backend.push(file, hash)
 
-                g.notes("--ref=bigstore", "append", sha, "-m", str(time.time()), "upload", "s3", "Dan", "Loewenherz", "<dloewenherz@gmail.com")
+                g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	s3	Dan Loewenherz <dloewenherz@gmail.com>".format(time.time()))
 
     g.push("origin", "refs/notes/bigstore")
 
@@ -112,34 +116,24 @@ def pull():
     pass
 
 def filter_clean():
-    def clean_file(hash, file):
-        hexdigest = hash.hexdigest()
-        filename = file.name
-        file.close()
-
-        git_directory = g.rev_parse(git_dir=True)
-        destination_folder = os.path.join(git_directory, "bigstore/objects")
-        mkdir_p(destination_folder)
-        destination_filename = os.path.join(destination_folder, hexdigest)
-        shutil.copy(filename, destination_filename)
-        sys.stdout.write("bigfile${}".format(hexdigest))
-
     file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
     hash = hashlib.md5()
+
     for line in sys.stdin:
+        if line == "bigfile\n":
+            sys.stdout.write(line)
+            sys.stdout.write(sys.stdin.next())
+            break
+
         hash.update(line)
         file.write(line)
+    else:
+        mkdir_p(object_directory)
+        shutil.copy(filename, object_filename(hexdigest))
 
-    file_length = file.tell()
-    file.seek(0)
+        sys.stdout.write("bigfile\n")
+        sys.stdout.write("md5${}".format(hash.hexdigest()))
 
-    if file_length == 40:
-        contents = file.read()
-        if thirty_two_hex.match(contents):
-            sys.stdout.write(contents)
-            sys.exit(0)
-
-    clean_file(hash, file)
 
 def filter_smudge():
     contents = sys.stdin.read()
