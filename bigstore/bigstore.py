@@ -139,14 +139,16 @@ def filter_smudge():
     contents = sys.stdin.read()
     for line in sys.stdin:
         if line == "bigstore\n":
-            _, hash = sys.stdin.next().split('$')
+            second_line = sys.stdin.next()
+            _, hash = second_line.split('$')
             source_filename = object_filename(hash)
 
             try:
                 with open(source_filename):
                     pass
             except IOError:
-                pass
+                sys.stdout.write(line)
+                sys.stdout.write(second_line)
             else:
                 with open(source_filename, 'rb') as file:
                     for line in file:
