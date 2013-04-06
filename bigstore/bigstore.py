@@ -72,13 +72,11 @@ def pathnames():
 
 def push():
     try:
-        # g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote")
-        pass
+        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote")
     except git.exc.GitCommandError:
         pass
     else:
-        # g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
-        pass
+        g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
 
     access_key_id = g.config("bigstore.s3.key")
     secret_access_key = g.config("bigstore.s3.secret")
@@ -128,11 +126,12 @@ def filter_clean():
         hash.update(line)
         file.write(line)
     else:
+        hexdigest = hash.hexdigest()
         mkdir_p(object_directory)
-        shutil.copy(filename, object_filename(hexdigest))
+        shutil.copy(file, object_filename(hexdigest))
 
         sys.stdout.write("bigstore\n")
-        sys.stdout.write("md5${}".format(hash.hexdigest()))
+        sys.stdout.write("md5${}".format(hexdigest))
 
 
 def filter_smudge():
@@ -166,10 +165,9 @@ def init():
     # g.config("bigstore.s3.secret", s3_secret)
     # g.config("bigstore.s3.bucket", s3_bucket)
 
-    # g.config("filter.bigstore.clean", "git-bigstore filter-clean")
-    # g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
+    g.config("filter.bigstore.clean", "git-bigstore filter-clean")
+    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
 
     git_directory = g.rev_parse(git_dir=True)
-    destination_folder = os.path.join(git_directory, "bigstore/objects")
-    mkdir_p(destination_folder)
+    mkdir_p(object_directory)
 
