@@ -136,11 +136,10 @@ def filter_clean():
 
 
 def filter_smudge():
-    contents = sys.stdin.read()
     for line in sys.stdin:
         if line == "bigstore\n":
             second_line = sys.stdin.next()
-            _, hash = second_line.split('$')
+            _, hash = second_line[:-1].split('$')
             source_filename = object_filename(hash)
 
             try:
@@ -155,8 +154,6 @@ def filter_smudge():
                         sys.stdout.write(line)
 
                 break
-
-        sys.stdout.write(line)
 
 def init():
     # print "Please enter your S3 Credentials"
