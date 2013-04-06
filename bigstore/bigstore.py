@@ -120,7 +120,7 @@ def filter_clean():
     hash = hashlib.md5()
 
     for line in sys.stdin:
-        if line == "bigfile\n":
+        if line == "bigstore\n":
             sys.stdout.write(line)
             sys.stdout.write(sys.stdin.next())
             break
@@ -131,27 +131,30 @@ def filter_clean():
         mkdir_p(object_directory)
         shutil.copy(filename, object_filename(hexdigest))
 
-        sys.stdout.write("bigfile\n")
+        sys.stdout.write("bigstore\n")
         sys.stdout.write("md5${}".format(hash.hexdigest()))
 
 
 def filter_smudge():
     contents = sys.stdin.read()
+    for line in sys.stdin:
+        if line == "bigstore\n":
+            _, hash = sys.stdin.next().split('$')
+            source_filename = object_filename(hash)
 
-    git_directory = g.rev_parse(git_dir=True)
+            try:
+                with open(source_filename):
+                    pass
+            except IOError:
+                pass
+            else:
+                with open(source_filename, 'rb') as file:
+                    for line in file:
+                        sys.stdout.write(line)
 
-    if thirty_two_hex.match(contents):
-        _, hexdigest = contents.split('$')
-        source_filename = os.path.join(git_directory, "bigstore/objects", hexdigest)
-        try:
-            file = open(source_filename, 'rb')
-        except IOError:
-            sys.stdout.write(contents)
-        else:
-            for line in file:
-                sys.stdout.write(line)
-    else:
-        sys.stdout.write(contents)
+                break
+
+        sys.stdout.write(line)
 
 def init():
     # print "Please enter your S3 Credentials"
