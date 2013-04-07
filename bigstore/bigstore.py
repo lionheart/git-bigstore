@@ -133,17 +133,20 @@ def pull():
                 if firstline == 'bigstore':
                     _, hash = secondline.split("$")
                     try:
-                        with open(object_filename(hash)) as file:
+                        with open(object_filename(hash)):
                             pass
                     except IOError:
-                        sys.stderr.write("downloading {}\n".format(filename))
-                        with open(filename, 'wb') as file:
-                            backend.pull(file, hash)
+                        if backend.exists(hash):
+                            sys.stderr.write("downloading {}\n".format(filename))
+                            with open(filename, 'wb') as file:
+                                backend.pull(file, hash)
 
-                        g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	s3	Dan Loewenherz <dloewenherz@gmail.com>".format(time.time()))
-                        g.add(filename)
+                            g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	s3	Dan Loewenherz <dloewenherz@gmail.com>".format(time.time()))
+                            g.add(filename)
 
                 break
+
+    g.push("origin", "refs/notes/bigstore")
 
 def filter_clean():
     file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
