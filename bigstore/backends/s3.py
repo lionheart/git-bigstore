@@ -19,6 +19,5 @@ class S3Backend(object):
         key.get_contents_to_file(file)
 
     def exists(self, hash):
-        return False
         return boto.s3.key.Key(self.bucket, hash).exists()
 

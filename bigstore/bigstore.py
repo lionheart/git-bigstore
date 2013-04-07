@@ -128,7 +128,7 @@ def pull():
             entries = []
 
         for entry in entries:
-            if "upload" in entry:
+            if "upload" in entry.split('\t'):
                 firstline, secondline = g.show(sha).split('\n')
                 if firstline == 'bigstore':
                     _, hash = secondline.split("$")
@@ -161,6 +161,8 @@ def filter_clean():
         hash.update(line)
         file.write(line)
     else:
+        file.close()
+
         hexdigest = hash.hexdigest()
         mkdir_p(object_directory)
         shutil.copy(file.name, object_filename(hexdigest))
