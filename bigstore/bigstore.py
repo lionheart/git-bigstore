@@ -214,6 +214,8 @@ def init():
             g.config("bigstore.s3.key", s3_key, file=".bigstore")
             g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
             g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+        else:
+            print "Reading credentials from .bigstore configuration file."
 
     g.config("filter.bigstore.clean", "git-bigstore filter-clean")
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
