@@ -34,6 +34,13 @@ def mkdir_p(path):
         else:
             raise
 
+def upload_callback(filename):
+    def inner(size, total):
+        sys.stderr.write("\r")
+        sys.stderr.write("{: <4.0%}\t{}".format(size / float(total), filename))
+
+    return inner
+
 def pathnames():
     """ Generator that will yield pathnames for files tracked under gitattributes """
     filters = []
@@ -89,9 +96,10 @@ def push():
                 _, hash = secondline.split("$")
 
                 if not backend.exists(hash):
-                    sys.stderr.write("uploading {}\n".format(filename))
                     with open(object_filename(hash)) as file:
-                        backend.push(file, hash)
+                        backend.push(file, hash, cb=upload_callback(filename))
+
+                    sys.stderr.write("\n")
 
                     user_name = g.config("user.name")
                     user_email = g.config("user.email")
@@ -128,9 +136,10 @@ def pull():
                             pass
                     except IOError:
                         if backend.exists(hash):
-                            sys.stderr.write("downloading {}\n".format(filename))
                             with open(filename, 'wb') as file:
-                                backend.pull(file, hash)
+                                backend.pull(file, hash, cb=upload_callback(filename))
+
+                            sys.stderr.write("\n")
 
                             user_name = g.config("user.name")
                             user_email = g.config("user.email")
