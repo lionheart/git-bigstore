@@ -67,9 +67,9 @@ def push():
     else:
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
 
-    access_key_id = g.config("bigstore.s3.key")
-    secret_access_key = g.config("bigstore.s3.secret")
-    bucket_name = g.config("bigstore.s3.bucket")
+    access_key_id = g.config("bigstore.s3.key", file=".bigstore")
+    secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
+    bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
     backend = S3Backend(access_key_id, secret_access_key, bucket_name)
 
     for sha, filename in pathnames():
@@ -107,9 +107,9 @@ def pull():
     else:
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
 
-    access_key_id = g.config("bigstore.s3.key")
-    secret_access_key = g.config("bigstore.s3.secret")
-    bucket_name = g.config("bigstore.s3.bucket")
+    access_key_id = g.config("bigstore.s3.key", file=".bigstore")
+    secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
+    bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
     backend = S3Backend(access_key_id, secret_access_key, bucket_name)
 
     for sha, filename in pathnames():
@@ -190,13 +190,20 @@ def init():
     s3_key = raw_input("Access Key: ")
     s3_secret = raw_input("Secret Key: ")
     s3_bucket = raw_input("Bucket Name: ")
+    try:
+        with open(".bigstore"):
+            pass
+    except IOError:
+        pass
+    else:
+        pass
 
-    g.config("bigstore.s3.key", s3_key)
-    g.config("bigstore.s3.secret", s3_secret)
-    g.config("bigstore.s3.bucket", s3_bucket)
+    g.config("bigstore.s3.key", s3_key, file=".bigstore")
+    g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
+    g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
 
-    g.config("filter.bigstore.clean", "git-bigstore filter-clean")
-    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
+    g.config("filter.bigstore.clean", "git-bigstore filter-clean", file=".bigstore")
+    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge", file=".bigstore")
 
     git_directory = g.rev_parse(git_dir=True)
     mkdir_p(object_directory)
