@@ -22,11 +22,14 @@ Well, that was easy! Your Git repository is now prepared to track big files. To 
 
 After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with an identifier string starting with `bigstore$` and ending with the file's md5 hash.
 
-git-bigstore won't automatically sync to S3 after a commit. To perform a sync, just run:
+git-bigstore won't automatically sync to S3 after a commit. To push changed files, just run:
 
-    $ git bigstore sync
+    $ git bigstore push
 
-This will download all remote files that aren't stored locally, and will upload all local files that aren't stored remotely.
+To pull down remote changes:
+
+    $ git bigstore pull
+
 
 But "INSERT X HERE" already exists...
 ---------------------------------
