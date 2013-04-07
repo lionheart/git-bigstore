@@ -202,8 +202,8 @@ def init():
     g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
     g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
 
-    g.config("filter.bigstore.clean", "git-bigstore filter-clean", file=".bigstore")
-    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge", file=".bigstore")
+    g.config("filter.bigstore.clean", "git-bigstore filter-clean")
+    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
 
     git_directory = g.rev_parse(git_dir=True)
     mkdir_p(object_directory)
