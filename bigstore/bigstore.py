@@ -194,22 +194,26 @@ def filter_smudge():
                 break
 
 def init():
-    print "Please enter your S3 Credentials"
-    print ""
-    s3_key = raw_input("Access Key: ")
-    s3_secret = raw_input("Secret Key: ")
-    s3_bucket = raw_input("Bucket Name: ")
     try:
         with open(".bigstore"):
             pass
     except IOError:
         pass
     else:
-        pass
+        try:
+            g.config("bigstore.s3.key", file=".bigstore")
+            g.config("bigstore.s3.secret", file=".bigstore")
+            g.config("bigstore.s3.bucket", file=".bigstore")
+        except git.exc.GitCommandError:
+            print "Please enter your S3 Credentials"
+            print ""
+            s3_key = raw_input("Access Key: ")
+            s3_secret = raw_input("Secret Key: ")
+            s3_bucket = raw_input("Bucket Name: ")
 
-    g.config("bigstore.s3.key", s3_key, file=".bigstore")
-    g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
-    g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+            g.config("bigstore.s3.key", s3_key, file=".bigstore")
+            g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
+            g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
 
     g.config("filter.bigstore.clean", "git-bigstore filter-clean")
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
