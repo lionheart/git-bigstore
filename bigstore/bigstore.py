@@ -15,7 +15,6 @@ import re
 import shutil
 import sys
 import tempfile
-import progressbar
 
 thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
 attribute_regex = re.compile(r'(^[^\s]*)')
