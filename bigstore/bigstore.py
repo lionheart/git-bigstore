@@ -93,7 +93,9 @@ def push():
                     with open(object_filename(hash)) as file:
                         backend.push(file, hash)
 
-                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	s3	Dan Loewenherz <dloewenherz@gmail.com>".format(time.time()))
+                    user_name = g.config("user.name")
+                    user_email = g.config("user.email")
+                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	s3	{} <{}>".format(time.time(), user_name, user_email))
 
     g.push("origin", "refs/notes/bigstore")
 
@@ -130,7 +132,9 @@ def pull():
                             with open(filename, 'wb') as file:
                                 backend.pull(file, hash)
 
-                            g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	s3	Dan Loewenherz <dloewenherz@gmail.com>".format(time.time()))
+                            user_name = g.config("user.name")
+                            user_email = g.config("user.email")
+                            g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	s3	{} <{}>".format(time.time(), user_name, user_email))
                             g.add(filename)
 
                 break
