@@ -35,16 +35,6 @@ def mkdir_p(path):
         else:
             raise
 
-def transfer_callback(name):
-    def inner(size, total):
-        widgets = ['{}: '.format(name), progressbar.Percentage(), ' ', progressbar.Bar()]
-        pbar = progressbar.ProgressBar(widgets=widgets, maxval=total).start()
-        pbar.update(size)
-
-        if size == total:
-            pbar.finish()
-    return inner
-
 def pathnames():
     """ Generator that will yield pathnames for files tracked under gitattributes """
     filters = []
