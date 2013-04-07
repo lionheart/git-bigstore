@@ -95,22 +95,55 @@ def push():
                 break
         else:
             firstline, secondline = g.show(sha).split('\n')
-            if firstline == 'bigstore\n':
+
+            if firstline == 'bigstore':
                 _, hash = secondline.split("$")
-            else:
-                continue
 
-            sys.stderr.write("{} {}\n".format(sha, filename))
-            if not backend.exists(hash):
-                with open(object_filename(hash)) as file:
-                    backend.push(file, hash)
+                if not backend.exists(hash):
+                    sys.stderr.write("uploading {}\n".format(filename))
+                    with open(object_filename(hash)) as file:
+                        backend.push(file, hash)
 
-                g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	s3	Dan Loewenherz <dloewenherz@gmail.com>".format(time.time()))
+                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	s3	Dan Loewenherz <dloewenherz@gmail.com>".format(time.time()))
 
     g.push("origin", "refs/notes/bigstore")
 
 def pull():
-    pass
+    try:
+        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
+    except git.exc.GitCommandError:
+        pass
+    else:
+        g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+
+    access_key_id = g.config("bigstore.s3.key")
+    secret_access_key = g.config("bigstore.s3.secret")
+    bucket_name = g.config("bigstore.s3.bucket")
+    backend = S3Backend(access_key_id, secret_access_key, bucket_name)
+
+    for sha, filename in pathnames():
+        try:
+            entries = g.notes("--ref=bigstore", "show", sha).split('\n')
+        except git.exc.GitCommandError:
+            entries = []
+
+        for entry in entries:
+            if "upload" in entry:
+                firstline, secondline = g.show(sha).split('\n')
+                if firstline == 'bigstore':
+                    _, hash = secondline.split("$")
+                    try:
+                        with open(object_filename(hash)) as file:
+                            pass
+                    except IOError:
+                        sys.stderr.write("downloading {}\n".format(filename))
+                        with open(filename, 'wb') as file:
+                            backend.pull(file, hash)
+
+                        g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	s3	Dan Loewenherz <dloewenherz@gmail.com>".format(time.time()))
+                        g.add(filename)
+
+                break
 
 def filter_clean():
     file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
