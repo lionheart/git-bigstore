@@ -20,10 +20,28 @@ thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
 attribute_regex = re.compile(r'(^[^\s]*)')
 g = git.Git('.')
 git_directory = g.rev_parse(git_dir=True)
-object_directory = os.path.join(git_directory, "bigstore", "objects")
 
-def object_filename(hash):
-    return os.path.join(object_directory, hash)
+try:
+    default_hash_function_name = g.config("bigstore.hasher")
+except git.exc.GitCommandError:
+    default_hash_function_name = 'sha256'
+
+hash_functions = {
+    'md5': hashlib.md5,
+    'sha1': hashlib.sha1,
+    'sha224': hashlib.sha224,
+    'sha256': hashlib.sha256,
+    'sha384': hashlib.sha384,
+    'sha512': hashlib.sha512
+}
+
+default_hash_function = hash_functions[default_hash_function_name]
+
+def object_directory(hash_function_name):
+    return os.path.join(git_directory, "bigstore", "objects", hash_function_name)
+
+def object_filename(hash_function_name, hash):
+    return os.path.join(object_directory(hash_function_name), hash[:2], hash[2:])
 
 def mkdir_p(path):
     try:
@@ -93,10 +111,10 @@ def push():
             firstline, secondline = g.show(sha).split('\n')
 
             if firstline == 'bigstore':
-                _, hash = secondline.split("$")
+                hash_function_name, hash = secondline.split("$")
 
                 if not backend.exists(hash):
-                    with open(object_filename(hash)) as file:
+                    with open(object_filename(hash_function_name, hash)) as file:
                         backend.push(file, hash, cb=upload_callback(filename))
 
                     sys.stderr.write("\n")
@@ -130,9 +148,9 @@ def pull():
             if "upload" in entry.split('\t'):
                 firstline, secondline = g.show(sha).split('\n')
                 if firstline == 'bigstore':
-                    _, hash = secondline.split("$")
+                    hash_function_name, hash = secondline.split("$")
                     try:
-                        with open(object_filename(hash)):
+                        with open(object_filename(hash_function_name, hash)):
                             pass
                     except IOError:
                         if backend.exists(hash):
@@ -152,7 +170,7 @@ def pull():
 
 def filter_clean():
     file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
-    hash = hashlib.md5()
+    hash = default_hash_function()
 
     for line in sys.stdin:
         if line == "bigstore\n":
@@ -166,19 +184,19 @@ def filter_clean():
         file.close()
 
         hexdigest = hash.hexdigest()
-        mkdir_p(object_directory)
-        shutil.copy(file.name, object_filename(hexdigest))
+        mkdir_p(object_directory(default_hash_function_name))
+        shutil.copy(file.name, object_filename(default_hash_function_name, hexdigest))
 
         sys.stdout.write("bigstore\n")
-        sys.stdout.write("md5${}".format(hexdigest))
+        sys.stdout.write("{}${}".format(default_hash_function_name, hexdigest))
 
 
 def filter_smudge():
     for line in sys.stdin:
         if line == "bigstore\n":
             second_line = sys.stdin.next()
-            _, hash = second_line[:-1].split('$')
-            source_filename = object_filename(hash)
+            hash_function_name, hash = second_line[:-1].split('$')
+            source_filename = object_filename(hash_function_name, hash)
 
             try:
                 with open(source_filename):
@@ -221,5 +239,5 @@ def init():
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
 
     git_directory = g.rev_parse(git_dir=True)
-    mkdir_p(object_directory)
+    mkdir_p(object_directory(default_hash_function_name))
 
