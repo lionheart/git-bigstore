@@ -214,6 +214,10 @@ def filter_clean():
     else:
         file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
         hash = default_hash_function()
+
+        hash.update(firstline)
+        file.write(firstline)
+
         for line in sys.stdin:
             hash.update(line)
             file.write(line)
@@ -248,6 +252,7 @@ def filter_smudge():
                 for line in file:
                     sys.stdout.write(line)
     else:
+        sys.stdout.write(firstline)
         for line in sys.stdin:
             sys.stdout.write(line)
 
