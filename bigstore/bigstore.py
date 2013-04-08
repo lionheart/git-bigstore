@@ -153,9 +153,11 @@ def push():
 
                     sys.stderr.write("\n")
 
-                    user_name = g.config("user.name")
-                    user_email = g.config("user.email")
-                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	{}	{} <{}>".format(time.time(), backend.name, user_name, user_email))
+                user_name = g.config("user.name")
+                user_email = g.config("user.email")
+
+                # Should the action be different if the file already exists on the backend?
+                g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	{}	{} <{}>".format(time.time(), backend.name, user_name, user_email))
 
     sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
