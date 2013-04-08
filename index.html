@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Git-bigstore by aurorasoftware</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Git-bigstore</h1>
+        <p class="header">Bigstore is an extension to Git that helps you track big files. Fast. Awesome.</p>
+
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/aurorasoftware/git-bigstore/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/aurorasoftware/git-bigstore/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/aurorasoftware/git-bigstore">View On GitHub</a></li>
+        </ul>
+
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/aurorasoftware">aurorasoftware</a></p>
+
+
+      </header>
+      <section>
+        <h1>git-bigstore</h1>
+
+<p>git-bigstore is an extension to Git that helps you track big files. For technical details, check out the <a href="https://github.com/aurorasoftware/git-bigstore/wiki/Bigstore">Wiki</a>.</p>
+
+<h2>Configuration</h2>
+
+<p>To get started, set up an Amazon S3, Google Cloud Storage, or Rackspace Cloud account to store stuff. Once you have your credentials available, you're ready to get started:</p>
+
+<pre><code>$ pip install git-bigstore
+$ git bigstore init
+</code></pre>
+
+<p>At this point, you will be prompted for which backend you would like to use and your credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.</p>
+
+<p>To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in your backend, run this command in your repository root:</p>
+
+<pre><code>$ echo "*.zip filter=bigstore" &gt; .gitattributes
+</code></pre>
+
+<p>After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with relevant identifying information.</p>
+
+<p>git-bigstore won't automatically sync to your selected backend after a commit. To push changed files, just run:</p>
+
+<pre><code>$ git bigstore push
+</code></pre>
+
+<p>To pull down remote changes:</p>
+
+<pre><code>$ git bigstore pull
+</code></pre>
+
+<p>You can also view the upload and download history of any file tracked by bigstore.</p>
+
+<pre><code>$ git bigstore log tsd20130403.pdf
+Mon Apr  8 11:48:51 2013 +0000: google → Dan Loewenherz &lt;dloewenherz@gmail.com&gt;
+Mon Apr  8 11:48:04 2013 +0000: google ← Dan Loewenherz &lt;dloewenherz@gmail.com
+</code></pre>
+
+<h2>But "INSERT X HERE" already exists...</h2>
+
+<p>I've been using git-media for a few days now, and I've observed that it breaks down because it violates the following guideline in the <a href="https://www.kernel.org/pub/software/scm/git/docs/gitattributes.html">Git docs</a>:</p>
+
+<blockquote>
+<p>For best results, clean should not alter its output further if it is run twice ("clean→clean" should be equivalent to "clean"), and multiple smudge commands should not alter clean's output ("smudge→smudge→clean" should be equivalent to "clean").</p>
+</blockquote>
+
+<p>This made it a bit tough to collaborate with multiple people, since Git would try to clean things that had already been cleaned, and smudge things that had already been smudged. No good!</p>
+
+<p>git-annex is another alternative, but it's solving a different problem and its implementation is a bit less dependent on Git itself. As a result, you essentially have to learn a whole new set of commands to work with it. I wanted to create something with as minimal complexity as possible.</p>
+
+<h2>Copyright</h2>
+
+<p>Copyright 2013 Aurora Software LLC <a href="mailto:hi@aurora.io">hi@aurora.io</a>.</p>
+
+<p>Licensed under Apache 2.0. See LICENSE for more details.</p>
+      </section>
+      <footer>
+        <p><small>Hosted on <a href="https://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		
+  </body>
+</html>
