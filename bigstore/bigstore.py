@@ -45,24 +45,32 @@ def default_backend():
     except git.exc.GitCommandError:
         backend_name = None
 
-    if backend_name == "s3":
+    backend = backend_for_name(backend_name)
+
+    if backend:
+        return backend
+    else:
+        sys.stderr.write("error: s3, google, and rackspace are currently the only supported backends")
+        sys.exit(0)
+
+def backend_for_name(name):
+    if name == "s3":
         access_key_id = g.config("bigstore.s3.key", file=".bigstore")
         secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
         bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
         return S3Backend(access_key_id, secret_access_key, bucket_name)
-    elif backend_name == "rackspace":
+    elif name == "rackspace":
         username = g.config("bigstore.rackspace.username", file=".bigstore")
         api_key = g.config("bigstore.rackspace.key", file=".bigstore")
         container_name = g.config("bigstore.rackspace.container", file=".bigstore")
         return RackspaceBackend(username, api_key, container_name)
-    elif backend_name == "google":
+    elif name == "google":
         access_key_id = g.config("bigstore.google.key", file=".bigstore")
         secret_access_key = g.config("bigstore.google.secret", file=".bigstore")
         bucket_name = g.config("bigstore.google.bucket", file=".bigstore")
         return GoogleBackend(access_key_id, secret_access_key, bucket_name)
     else:
-        sys.stderr.write("error: s3, google, and rackspace are currently the only supported backends")
-        sys.exit(0)
+        return None
 
 def object_directory(hash_function_name):
     return os.path.join(git_directory, "bigstore", "objects", hash_function_name)
@@ -171,14 +179,15 @@ def pull():
             entries = []
 
         for entry in entries:
-            if "upload" in entry.split('\t'):
+            timestamp, action, backend_name, _ = entry.split('\t')
+            if action == "upload":
                 firstline, hash_function_name, hash = g.show(sha).split('\n')
                 if firstline == 'bigstore':
                     try:
                         with open(object_filename(hash_function_name, hash)):
                             pass
                     except IOError:
-                        backend = default_backend()
+                        backend = backend_for_name(backend_name)
                         if backend.exists(hash):
                             with open(filename, 'wb') as file:
                                 backend.pull(file, hash, cb=upload_callback(filename))
