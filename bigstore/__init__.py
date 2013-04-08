@@ -22,6 +22,7 @@ from .bigstore import (
     init,
     push,
     pull,
+    log,
 )
 
 import backends
@@ -29,6 +30,6 @@ import backends
 __all__ = [
     '__author__', '__copyright__', '__email__', '__license__',
     '__maintainer__', '__version__', 'filter_smudge', 'filter_clean',
-    'init', 'push', 'pull', 'backends'
+    'init', 'push', 'pull', 'backends', 'log'
 ]
 

@@ -4,7 +4,7 @@
 import os
 import sys
 import git
-from bigstore import push, pull, filter_clean, filter_smudge, init
+from bigstore import push, pull, filter_clean, filter_smudge, init, log
 
 def print_help():
     print """usage: git bigstore push|pull|log|init"""
@@ -20,6 +20,8 @@ if __name__ == "__main__":
         push()
     elif sys.argv[1] == "pull":
         pull()
+    elif sys.argv[1] == "log":
+        log()
     elif sys.argv[1] == "filter-clean":
         filter_clean()
     elif sys.argv[1] == "filter-smudge":

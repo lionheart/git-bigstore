@@ -3,6 +3,7 @@
 import time
 import os
 import fnmatch
+from datetime import datetime
 
 from .backends import S3Backend
 
@@ -237,6 +238,26 @@ def request_s3_credentials():
     g.config("bigstore.s3.key", s3_key, file=".bigstore")
     g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
     g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+
+def log():
+    filename = sys.argv[2]
+    trees = g.log("--pretty=format:%T", filename).split('\n')
+    for tree in trees:
+        entry = g.ls_tree('-r', tree, filename)
+        metadata, filename = entry.split('\t')
+        _, _, digest = metadata.split(' ')
+        notes = g.notes("--ref=bigstore", "show", digest).split('\n')
+
+        for note in notes:
+            if note == '':
+                continue
+
+            timestamp, action, backend, user = note.split('\t')
+            dt = datetime.fromtimestamp(float(timestamp))
+            if action == "upload":
+                print "{}: uploaded to {} by {}".format(dt, backend, user)
+            else:
+                print "{}: downloaded from {} by {}".format(dt, backend, user)
 
 def init():
     try:
