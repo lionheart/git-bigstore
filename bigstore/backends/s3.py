@@ -2,7 +2,7 @@ import boto
 
 class S3Backend(object):
     def __init__(self, key, secret, bucket_name):
-        self.key = key
+        self.access_key = key
         self.secret = secret
         self.bucket = bucket_name
         self.conn = boto.connect_s3(key, secret)

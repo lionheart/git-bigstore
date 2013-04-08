@@ -16,7 +16,6 @@ import shutil
 import sys
 import tempfile
 
-thirty_two_hex = re.compile(r'^bigfile\$[a-f0-9]{32}')
 attribute_regex = re.compile(r'(^[^\s]*)')
 g = git.Git('.')
 git_directory = g.rev_parse(git_dir=True)
@@ -86,11 +85,14 @@ def pathnames():
 
 def push():
     try:
+        sys.stderr.write("pulling bigstore metadata...")
         g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
-        pass
+        g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+        sys.stderr.write("done\n")
     else:
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+        sys.stderr.write("done\n")
 
     access_key_id = g.config("bigstore.s3.key", file=".bigstore")
     secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
@@ -108,11 +110,8 @@ def push():
             if "upload" in entry:
                 break
         else:
-            firstline, secondline = g.show(sha).split('\n')
-
+            firstline, hash_function_name, hash = g.show(sha).split('\n')
             if firstline == 'bigstore':
-                hash_function_name, hash = secondline.split("$")
-
                 if not backend.exists(hash):
                     with open(object_filename(hash_function_name, hash)) as file:
                         backend.push(file, hash, cb=upload_callback(filename))
@@ -123,15 +122,20 @@ def push():
                     user_email = g.config("user.email")
                     g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	s3	{} <{}>".format(time.time(), user_name, user_email))
 
+    sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
+    sys.stderr.write("done\n")
 
 def pull():
     try:
+        sys.stderr.write("pulling bigstore metadata...")
         g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
-        pass
+        g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+        sys.stderr.write("done\n")
     else:
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+        sys.stderr.write("done\n")
 
     access_key_id = g.config("bigstore.s3.key", file=".bigstore")
     secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
@@ -146,9 +150,8 @@ def pull():
 
         for entry in entries:
             if "upload" in entry.split('\t'):
-                firstline, secondline = g.show(sha).split('\n')
+                firstline, hash_function_name, hash = g.show(sha).split('\n')
                 if firstline == 'bigstore':
-                    hash_function_name, hash = secondline.split("$")
                     try:
                         with open(object_filename(hash_function_name, hash)):
                             pass
@@ -166,7 +169,9 @@ def pull():
 
                 break
 
+    sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
+    sys.stderr.write("done\n")
 
 def filter_clean():
     file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
@@ -176,6 +181,7 @@ def filter_clean():
         if line == "bigstore\n":
             sys.stdout.write(line)
             sys.stdout.write(sys.stdin.next())
+            sys.stdout.write(sys.stdin.next())
             break
 
         hash.update(line)
@@ -184,26 +190,28 @@ def filter_clean():
         file.close()
 
         hexdigest = hash.hexdigest()
-        mkdir_p(object_directory(default_hash_function_name))
+        mkdir_p(os.path.join(object_directory(default_hash_function_name), hexdigest[:2]))
         shutil.copy(file.name, object_filename(default_hash_function_name, hexdigest))
 
         sys.stdout.write("bigstore\n")
-        sys.stdout.write("{}${}".format(default_hash_function_name, hexdigest))
+        sys.stdout.write("{}\n".format(default_hash_function_name))
+        sys.stdout.write("{}\n".format(hexdigest))
 
 
 def filter_smudge():
     for line in sys.stdin:
         if line == "bigstore\n":
-            second_line = sys.stdin.next()
-            hash_function_name, hash = second_line[:-1].split('$')
-            source_filename = object_filename(hash_function_name, hash)
+            hash_function_name = sys.stdin.next()
+            hash = sys.stdin.next()
+            source_filename = object_filename(hash_function_name[:-1], hash[:-1])
 
             try:
                 with open(source_filename):
                     pass
             except IOError:
                 sys.stdout.write(line)
-                sys.stdout.write(second_line)
+                sys.stdout.write(hash_function_name)
+                sys.stdout.write(hash)
             else:
                 with open(source_filename, 'rb') as file:
                     for line in file:
@@ -211,29 +219,39 @@ def filter_smudge():
 
                 break
 
+def request_s3_credentials():
+    print "Please enter your S3 Credentials"
+    print ""
+    s3_key = raw_input("Access Key: ")
+    s3_secret = raw_input("Secret Key: ")
+    s3_bucket = raw_input("Bucket Name: ")
+
+    g.config("bigstore.s3.key", s3_key, file=".bigstore")
+    g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
+    g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+
 def init():
     try:
         with open(".bigstore"):
             pass
     except IOError:
-        pass
+        request_s3_credentials()
     else:
         try:
             g.config("bigstore.s3.key", file=".bigstore")
             g.config("bigstore.s3.secret", file=".bigstore")
             g.config("bigstore.s3.bucket", file=".bigstore")
         except git.exc.GitCommandError:
-            print "Please enter your S3 Credentials"
-            print ""
-            s3_key = raw_input("Access Key: ")
-            s3_secret = raw_input("Secret Key: ")
-            s3_bucket = raw_input("Bucket Name: ")
-
-            g.config("bigstore.s3.key", s3_key, file=".bigstore")
-            g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
-            g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+            request_s3_credentials()
         else:
             print "Reading credentials from .bigstore configuration file."
+
+    try:
+        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
+    except git.exc.GitCommandError:
+        pass
+    else:
+        g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
 
     g.config("filter.bigstore.clean", "git-bigstore filter-clean")
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
