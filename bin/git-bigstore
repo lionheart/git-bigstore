@@ -7,7 +7,15 @@ import git
 from bigstore import push, pull, filter_clean, filter_smudge, init, log
 
 def print_help():
-    print """usage: git bigstore init|push|pull|log"""
+    print """usage: git bigstore init|push|pull|log
+
+    init			initialize a repository to use bigstore
+    push			upload all bigstore files to your storage backend
+    push <filepattern>...	same as "push", but only apply to specified patterns
+    pull			download all bigstore files from your storage backend
+    pull <filepattern>...	same as "pull", but only apply to specified patterns
+    log <filename>		display a history of the specified file
+"""
 
 length = len(sys.argv)
 
