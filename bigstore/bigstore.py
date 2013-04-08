@@ -311,9 +311,9 @@ def log():
             timestamp, action, backend, user = note.split('\t')
             dt = datetime.fromtimestamp(float(timestamp))
             if action == "upload":
-                print "{}: uploaded to {} by {}".format(dt.strftime("%a %b %e %X %Y +0000"), backend, user)
+                print u"{}: {} \u2190 {}".format(dt.strftime("%a %b %e %X %Y +0000"), backend, user)
             else:
-                print "{}: downloaded from {} by {}".format(dt.strftime("%a %b %e %X %Y +0000"), backend, user)
+                print u"{}: {} \u2192 {}".format(dt.strftime("%a %b %e %X %Y +0000"), backend, user)
 
 def init():
     try:
