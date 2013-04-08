@@ -206,19 +206,18 @@ def pull():
     sys.stderr.write("done\n")
 
 def filter_clean():
-    file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
-    hash = default_hash_function()
-
-    for line in sys.stdin:
-        if line == "bigstore\n":
+    firstline = sys.stdin.next()
+    if firstline == "bigstore\n":
+        sys.stdout.write(firstline)
+        for line in sys.stdin:
             sys.stdout.write(line)
-            sys.stdout.write(sys.stdin.next())
-            sys.stdout.write(sys.stdin.next())
-            break
-
-        hash.update(line)
-        file.write(line)
     else:
+        file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
+        hash = default_hash_function()
+        for line in sys.stdin:
+            hash.update(line)
+            file.write(line)
+
         file.close()
 
         hexdigest = hash.hexdigest()
@@ -231,25 +230,26 @@ def filter_clean():
 
 
 def filter_smudge():
-    for line in sys.stdin:
-        if line == "bigstore\n":
-            hash_function_name = sys.stdin.next()
-            hash = sys.stdin.next()
-            source_filename = object_filename(hash_function_name[:-1], hash[:-1])
+    firstline = sys.stdin.next()
+    if firstline == "bigstore\n":
+        hash_function_name = sys.stdin.next()
+        hash = sys.stdin.next()
+        source_filename = object_filename(hash_function_name[:-1], hash[:-1])
 
-            try:
-                with open(source_filename):
-                    pass
-            except IOError:
-                sys.stdout.write(line)
-                sys.stdout.write(hash_function_name)
-                sys.stdout.write(hash)
-            else:
-                with open(source_filename, 'rb') as file:
-                    for line in file:
-                        sys.stdout.write(line)
-
-                break
+        try:
+            with open(source_filename):
+                pass
+        except IOError:
+            sys.stdout.write(firstline)
+            sys.stdout.write(hash_function_name)
+            sys.stdout.write(hash)
+        else:
+            with open(source_filename, 'rb') as file:
+                for line in file:
+                    sys.stdout.write(line)
+    else:
+        for line in sys.stdin:
+            sys.stdout.write(line)
 
 def request_rackspace_credentials():
     print
