@@ -134,12 +134,13 @@ def push():
         sys.stderr.write("done\n")
 
     if len(sys.argv) > 2:
-        specified_paths = sys.argv[2:]
+        filters = sys.argv[2:]
     else:
-        specified_paths = []
+        filters = []
 
     for sha, filename in pathnames():
-        if len(specified_paths) == 0 or filename in specified_paths:
+        should_process = len(filters) == 0 or any(fnmatch.fnmatch(filename, filter) for filter in filters)
+        if should_process:
             try:
                 entries = g.notes("--ref=bigstore", "show", sha).split('\n')
             except git.exc.GitCommandError:
@@ -185,12 +186,13 @@ def pull():
         sys.stderr.write("done\n")
 
     if len(sys.argv) > 2:
-        specified_paths = sys.argv[2:]
+        filters = sys.argv[2:]
     else:
-        specified_paths = []
+        filters = []
 
     for sha, filename in pathnames():
-        if len(specified_paths) == 0 or filename in specified_paths:
+        should_process = len(filters) == 0 or any(fnmatch.fnmatch(filename, filter) for filter in filters)
+        if should_process:
             try:
                 entries = g.notes("--ref=bigstore", "show", sha).split('\n')
             except git.exc.GitCommandError:
