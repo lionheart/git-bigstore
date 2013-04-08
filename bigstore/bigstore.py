@@ -24,7 +24,7 @@ g = git.Git('.')
 git_directory = g.rev_parse(git_dir=True)
 
 try:
-    default_hash_function_name = g.config("bigstore.hasher")
+    default_hash_function_name = g.config("bigstore.hash_function")
 except git.exc.GitCommandError:
     default_hash_function_name = 'sha256'
 
@@ -75,8 +75,8 @@ def backend_for_name(name):
 def object_directory(hash_function_name):
     return os.path.join(git_directory, "bigstore", "objects", hash_function_name)
 
-def object_filename(hash_function_name, hash):
-    return os.path.join(object_directory(hash_function_name), hash[:2], hash[2:])
+def object_filename(hash_function_name, hexdigest):
+    return os.path.join(object_directory(hash_function_name), hexdigest[:2], hexdigest[2:])
 
 def mkdir_p(path):
     try:
@@ -152,11 +152,11 @@ def push():
                 if "upload" in entry and backend.name in entry:
                     break
             else:
-                firstline, hash_function_name, hash = g.show(sha).split('\n')
+                firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
                 if firstline == 'bigstore':
-                    if not backend.exists(hash):
-                        with open(object_filename(hash_function_name, hash)) as file:
-                            backend.push(file, hash, cb=upload_callback(filename))
+                    if not backend.exists(hexdigest):
+                        with open(object_filename(hash_function_name, hexdigest)) as file:
+                            backend.push(file, hexdigest, cb=upload_callback(filename))
 
                         sys.stderr.write("\n")
 
@@ -201,16 +201,16 @@ def pull():
                 for entry in entries:
                     timestamp, action, backend_name, _ = entry.split('\t')
                     if action == "upload":
-                        firstline, hash_function_name, hash = g.show(sha).split('\n')
+                        firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
                         if firstline == 'bigstore':
                             try:
-                                with open(object_filename(hash_function_name, hash)):
+                                with open(object_filename(hash_function_name, hexdigest)):
                                     pass
                             except IOError:
                                 backend = backend_for_name(backend_name)
-                                if backend.exists(hash):
+                                if backend.exists(hexdigest):
                                     with open(filename, 'wb') as file:
-                                        backend.pull(file, hash, cb=upload_callback(filename))
+                                        backend.pull(file, hexdigest, cb=upload_callback(filename))
 
                                     sys.stderr.write("\n")
 
@@ -233,18 +233,17 @@ def filter_clean():
             sys.stdout.write(line)
     else:
         file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
-        hash = default_hash_function()
-
-        hash.update(firstline)
+        hash_function = default_hash_function()
+        hash_function.update(firstline)
         file.write(firstline)
 
         for line in sys.stdin:
-            hash.update(line)
+            hash_function.update(line)
             file.write(line)
 
         file.close()
 
-        hexdigest = hash.hexdigest()
+        hexdigest = hash_function.hexdigest()
         mkdir_p(os.path.join(object_directory(default_hash_function_name), hexdigest[:2]))
         shutil.copy(file.name, object_filename(default_hash_function_name, hexdigest))
 
@@ -257,8 +256,8 @@ def filter_smudge():
     firstline = sys.stdin.next()
     if firstline == "bigstore\n":
         hash_function_name = sys.stdin.next()
-        hash = sys.stdin.next()
-        source_filename = object_filename(hash_function_name[:-1], hash[:-1])
+        hexdigest = sys.stdin.next()
+        source_filename = object_filename(hash_function_name[:-1], hexdigest[:-1])
 
         try:
             with open(source_filename):
@@ -266,7 +265,7 @@ def filter_smudge():
         except IOError:
             sys.stdout.write(firstline)
             sys.stdout.write(hash_function_name)
-            sys.stdout.write(hash)
+            sys.stdout.write(hexdigest)
         else:
             with open(source_filename, 'rb') as file:
                 for line in file:
