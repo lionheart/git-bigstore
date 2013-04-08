@@ -10,7 +10,7 @@ class GoogleBackend(object):
 
     @property
     def name(self):
-        return "google"
+        return "gs"
 
     def key(self, hash):
         return boto.s3.key.Key(self.bucket, "{}/{}".format(hash[:2], hash[2:]))

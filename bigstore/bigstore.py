@@ -50,7 +50,7 @@ def default_backend():
     if backend:
         return backend
     else:
-        sys.stderr.write("error: s3, google, and rackspace are currently the only supported backends")
+        sys.stderr.write("error: s3, gs, and cloudfiles are currently the only supported backends")
         sys.exit(0)
 
 def backend_for_name(name):
@@ -59,15 +59,15 @@ def backend_for_name(name):
         secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
         bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
         return S3Backend(access_key_id, secret_access_key, bucket_name)
-    elif name == "rackspace":
-        username = g.config("bigstore.rackspace.username", file=".bigstore")
-        api_key = g.config("bigstore.rackspace.key", file=".bigstore")
-        container_name = g.config("bigstore.rackspace.container", file=".bigstore")
+    elif name == "cloudfiles":
+        username = g.config("bigstore.cloudfiles.username", file=".bigstore")
+        api_key = g.config("bigstore.cloudfiles.key", file=".bigstore")
+        container_name = g.config("bigstore.cloudfiles.container", file=".bigstore")
         return RackspaceBackend(username, api_key, container_name)
-    elif name == "google":
-        access_key_id = g.config("bigstore.google.key", file=".bigstore")
-        secret_access_key = g.config("bigstore.google.secret", file=".bigstore")
-        bucket_name = g.config("bigstore.google.bucket", file=".bigstore")
+    elif name == "gs":
+        access_key_id = g.config("bigstore.gs.key", file=".bigstore")
+        secret_access_key = g.config("bigstore.gs.secret", file=".bigstore")
+        bucket_name = g.config("bigstore.gs.bucket", file=".bigstore")
         return GoogleBackend(access_key_id, secret_access_key, bucket_name)
     else:
         return None
@@ -264,10 +264,10 @@ def request_rackspace_credentials():
     api_key = raw_input("API Key: ")
     container = raw_input("Container: ")
 
-    g.config("bigstore.backend", "rackspace", file=".bigstore")
-    g.config("bigstore.rackspace.username", username, file=".bigstore")
-    g.config("bigstore.rackspace.key", api_key, file=".bigstore")
-    g.config("bigstore.rackspace.container", container, file=".bigstore")
+    g.config("bigstore.backend", "cloudfiles", file=".bigstore")
+    g.config("bigstore.cloudfiles.username", username, file=".bigstore")
+    g.config("bigstore.cloudfiles.key", api_key, file=".bigstore")
+    g.config("bigstore.cloudfiles.container", container, file=".bigstore")
 
 def request_s3_credentials():
     print
@@ -290,10 +290,10 @@ def request_google_cloud_storage_credentials():
     google_secret = raw_input("Secret Key: ")
     google_bucket = raw_input("Bucket Name: ")
 
-    g.config("bigstore.backend", "google", file=".bigstore")
-    g.config("bigstore.google.key", google_key, file=".bigstore")
-    g.config("bigstore.google.secret", google_secret, file=".bigstore")
-    g.config("bigstore.google.bucket", google_bucket, file=".bigstore")
+    g.config("bigstore.backend", "gs", file=".bigstore")
+    g.config("bigstore.gs.key", google_key, file=".bigstore")
+    g.config("bigstore.gs.secret", google_secret, file=".bigstore")
+    g.config("bigstore.gs.bucket", google_bucket, file=".bigstore")
 
 def log():
     filename = sys.argv[2]
@@ -336,16 +336,16 @@ def init():
                 request_s3_credentials()
         elif choice == "2":
             try:
-                g.config("bigstore.google.key", file=".bigstore")
-                g.config("bigstore.google.secret", file=".bigstore")
-                g.config("bigstore.google.bucket", file=".bigstore")
+                g.config("bigstore.gs.key", file=".bigstore")
+                g.config("bigstore.gs.secret", file=".bigstore")
+                g.config("bigstore.gs.bucket", file=".bigstore")
             except git.exc.GitCommandError:
                 request_google_cloud_storage_credentials()
         elif choice == "3":
             try:
-                g.config("bigstore.rackspace.username", file=".bigstore")
-                g.config("bigstore.rackspace.key", file=".bigstore")
-                g.config("bigstore.rackspace.container", file=".bigstore")
+                g.config("bigstore.cloudfiles.username", file=".bigstore")
+                g.config("bigstore.cloudfiles.key", file=".bigstore")
+                g.config("bigstore.cloudfiles.container", file=".bigstore")
             except git.exc.GitCommandError:
                 request_rackspace_credentials()
 

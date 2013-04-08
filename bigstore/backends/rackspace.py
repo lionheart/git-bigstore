@@ -9,7 +9,7 @@ class RackspaceBackend(object):
 
     @property
     def name(self):
-        return "rackspace"
+        return "cloudfiles"
 
     def key(self, hash):
         return cloudfiles.Object(container=self.container, name="{}/{}".format(hash[:2], hash[2:]))
