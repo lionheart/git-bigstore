@@ -247,7 +247,7 @@ def log():
         metadata, filename = entry.split('\t')
         _, _, digest = metadata.split(' ')
         notes = g.notes("--ref=bigstore", "show", digest).split('\n')
-
+        notes.reverse()
         for note in notes:
             if note == '':
                 continue
