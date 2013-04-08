@@ -36,6 +36,21 @@ hash_functions = {
 
 default_hash_function = hash_functions[default_hash_function_name]
 
+def default_backend():
+    try:
+        backend_name = g.config("bigstore.backend", file=".bigstore")
+    except git.exc.GitCommandError:
+        backend_name = None
+
+    if backend_name == "s3":
+        access_key_id = g.config("bigstore.s3.key", file=".bigstore")
+        secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
+        bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
+        return S3Backend(access_key_id, secret_access_key, bucket_name)
+    else:
+        sys.stderr.write("error: s3 is currently the only supported backend")
+        sys.exit(0)
+
 def object_directory(hash_function_name):
     return os.path.join(git_directory, "bigstore", "objects", hash_function_name)
 
@@ -94,11 +109,6 @@ def push():
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
         sys.stderr.write("done\n")
 
-    access_key_id = g.config("bigstore.s3.key", file=".bigstore")
-    secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
-    bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
-    backend = S3Backend(access_key_id, secret_access_key, bucket_name)
-
     for sha, filename in pathnames():
         try:
             entries = g.notes("--ref=bigstore", "show", sha).split('\n')
@@ -112,6 +122,7 @@ def push():
         else:
             firstline, hash_function_name, hash = g.show(sha).split('\n')
             if firstline == 'bigstore':
+                backend = default_backend()
                 if not backend.exists(hash):
                     with open(object_filename(hash_function_name, hash)) as file:
                         backend.push(file, hash, cb=upload_callback(filename))
@@ -137,11 +148,6 @@ def pull():
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
         sys.stderr.write("done\n")
 
-    access_key_id = g.config("bigstore.s3.key", file=".bigstore")
-    secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
-    bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
-    backend = S3Backend(access_key_id, secret_access_key, bucket_name)
-
     for sha, filename in pathnames():
         try:
             entries = g.notes("--ref=bigstore", "show", sha).split('\n')
@@ -156,6 +162,7 @@ def pull():
                         with open(object_filename(hash_function_name, hash)):
                             pass
                     except IOError:
+                        backend = default_backend()
                         if backend.exists(hash):
                             with open(filename, 'wb') as file:
                                 backend.pull(file, hash, cb=upload_callback(filename))
@@ -226,6 +233,7 @@ def request_s3_credentials():
     s3_secret = raw_input("Secret Key: ")
     s3_bucket = raw_input("Bucket Name: ")
 
+    g.config("bigstore.backend", "s3", file=".bigstore")
     g.config("bigstore.s3.key", s3_key, file=".bigstore")
     g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
     g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")

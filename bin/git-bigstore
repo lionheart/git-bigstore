@@ -7,23 +7,23 @@ import git
 from bigstore import push, pull, filter_clean, filter_smudge, init
 
 def print_help():
-    print """usage: git bigstore push|pull|log|init
-"""
+    print """usage: git bigstore push|pull|log|init"""
 
 length = len(sys.argv)
 
-if length == 1:
-    print_help()
-elif sys.argv[1] == "init":
-    init()
-elif sys.argv[1] == "push":
-    push()
-elif sys.argv[1] == "pull":
-    pull()
-elif sys.argv[1] == "filter-clean":
-    filter_clean()
-elif sys.argv[1] == "filter-smudge":
-    filter_smudge()
-else:
-    print_help()
+if __name__ == "__main__":
+    if length == 1:
+        print_help()
+    elif sys.argv[1] == "init":
+        init()
+    elif sys.argv[1] == "push":
+        push()
+    elif sys.argv[1] == "pull":
+        pull()
+    elif sys.argv[1] == "filter-clean":
+        filter_clean()
+    elif sys.argv[1] == "filter-smudge":
+        filter_smudge()
+    else:
+        print_help()
 
