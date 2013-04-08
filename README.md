@@ -11,7 +11,7 @@ To get started, set up an Amazon S3, Google Cloud Storage, or Rackspace Cloud ac
     $ pip install git-bigstore
     $ git bigstore init
 
-At this point, you will be prompted for which backend you would like to use and the appropriate credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
+At this point, you will be prompted for which backend you would like to use and your credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
 
 To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in S3, run this command in your repository root:
 
