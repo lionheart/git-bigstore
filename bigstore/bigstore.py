@@ -82,7 +82,10 @@ def mkdir_p(path):
 def upload_callback(filename):
     def inner(size, total):
         sys.stderr.write("\r")
-        sys.stderr.write("{: <4.0%}\t{}".format(size / float(total), filename))
+        if total > 0:
+            sys.stderr.write("{: <4.0%}\t{}".format(size / float(total), filename))
+        else:
+            sys.stderr.write("?%\t{}".format(filename))
 
     return inner
 
