@@ -133,35 +133,41 @@ def push():
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
         sys.stderr.write("done\n")
 
+    if len(sys.argv) > 2:
+        specified_paths = sys.argv[2:]
+    else:
+        specified_paths = []
+
     for sha, filename in pathnames():
-        try:
-            entries = g.notes("--ref=bigstore", "show", sha).split('\n')
-        except git.exc.GitCommandError:
-            # No notes exist for this object
-            entries = []
+        if len(specified_paths) == 0 or filename in specified_paths:
+            try:
+                entries = g.notes("--ref=bigstore", "show", sha).split('\n')
+            except git.exc.GitCommandError:
+                # No notes exist for this object
+                entries = []
 
-        backend = default_backend()
-        for entry in entries:
-            if "upload" in entry and backend.name in entry:
-                break
-        else:
-            firstline, hash_function_name, hash = g.show(sha).split('\n')
-            if firstline == 'bigstore':
-                if not backend.exists(hash):
-                    with open(object_filename(hash_function_name, hash)) as file:
-                        backend.push(file, hash, cb=upload_callback(filename))
+            backend = default_backend()
+            for entry in entries:
+                if "upload" in entry and backend.name in entry:
+                    break
+            else:
+                firstline, hash_function_name, hash = g.show(sha).split('\n')
+                if firstline == 'bigstore':
+                    if not backend.exists(hash):
+                        with open(object_filename(hash_function_name, hash)) as file:
+                            backend.push(file, hash, cb=upload_callback(filename))
 
-                    sys.stderr.write("\n")
+                        sys.stderr.write("\n")
 
-                user_name = g.config("user.name")
-                user_email = g.config("user.email")
+                    user_name = g.config("user.name")
+                    user_email = g.config("user.email")
 
-                # XXX Should the action ("upload") be different if the file already exists on the backend?
-                action = "upload"
+                    # XXX Should the action ("upload") be different if the file already exists on the backend?
+                    action = "upload"
 
-                # We use the timestamp as the first entry as it will help us
-                # sort the entries easily with the cat_sort_uniq merge.
-                g.notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
+                    # We use the timestamp as the first entry as it will help us
+                    # sort the entries easily with the cat_sort_uniq merge.
+                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
 
     sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
@@ -178,34 +184,40 @@ def pull():
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
         sys.stderr.write("done\n")
 
+    if len(sys.argv) > 2:
+        specified_paths = sys.argv[2:]
+    else:
+        specified_paths = []
+
     for sha, filename in pathnames():
-        try:
-            entries = g.notes("--ref=bigstore", "show", sha).split('\n')
-        except git.exc.GitCommandError:
-            entries = []
+        if len(specified_paths) == 0 or filename in specified_paths:
+            try:
+                entries = g.notes("--ref=bigstore", "show", sha).split('\n')
+            except git.exc.GitCommandError:
+                entries = []
 
-        for entry in entries:
-            timestamp, action, backend_name, _ = entry.split('\t')
-            if action == "upload":
-                firstline, hash_function_name, hash = g.show(sha).split('\n')
-                if firstline == 'bigstore':
-                    try:
-                        with open(object_filename(hash_function_name, hash)):
-                            pass
-                    except IOError:
-                        backend = backend_for_name(backend_name)
-                        if backend.exists(hash):
-                            with open(filename, 'wb') as file:
-                                backend.pull(file, hash, cb=upload_callback(filename))
+            for entry in entries:
+                timestamp, action, backend_name, _ = entry.split('\t')
+                if action == "upload":
+                    firstline, hash_function_name, hash = g.show(sha).split('\n')
+                    if firstline == 'bigstore':
+                        try:
+                            with open(object_filename(hash_function_name, hash)):
+                                pass
+                        except IOError:
+                            backend = backend_for_name(backend_name)
+                            if backend.exists(hash):
+                                with open(filename, 'wb') as file:
+                                    backend.pull(file, hash, cb=upload_callback(filename))
 
-                            sys.stderr.write("\n")
+                                sys.stderr.write("\n")
 
-                            user_name = g.config("user.name")
-                            user_email = g.config("user.email")
-                            g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	{}	{} <{}>".format(time.time() + time.timezone, backend.name, user_name, user_email))
-                            g.add(filename)
+                                user_name = g.config("user.name")
+                                user_email = g.config("user.email")
+                                g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	{}	{} <{}>".format(time.time() + time.timezone, backend.name, user_name, user_email))
+                                g.add(filename)
 
-                break
+                    break
 
     sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
