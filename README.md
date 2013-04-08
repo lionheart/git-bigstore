@@ -6,23 +6,12 @@ git-bigstore is an extension to Git that helps you track big files. For technica
 Configuration
 -------------
 
-To get started, set up an Amazon S3 bucket to store stuff. Once you have your access key id and secret access key on hand, run the following:
+To get started, set up an Amazon S3, Google Cloud Storage, or Rackspace Cloud account to store stuff. Once you have your credentials available, you're ready to get started:
 
     $ pip install git-bigstore
     $ git bigstore init
-    What backend would you like to store your files with?
-    (1) Amazon S3
-    (2) Google Cloud Storage
-    (3) Rackspace Cloud Files
-    Enter your choice here: 1
 
-    Enter your Amazon S3 Credentials
-
-    Access Key: key
-    Secret Key: secret
-    Bucket Name: my-bucket
-
-Well, that was easy! Your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
+At this point, you will be prompted for which backend you would like to use and the appropriate credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
 
 To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in S3, run this command in your repository root:
 
