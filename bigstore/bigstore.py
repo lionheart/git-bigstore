@@ -196,7 +196,7 @@ def pull():
 
                             user_name = g.config("user.name")
                             user_email = g.config("user.email")
-                            g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	{}	{} <{}>".format(time.time(), backend.name, user_name, user_email))
+                            g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	{}	{} <{}>".format(time.time() + time.timezone, backend.name, user_name, user_email))
                             g.add(filename)
 
                 break
@@ -311,9 +311,9 @@ def log():
             timestamp, action, backend, user = note.split('\t')
             dt = datetime.fromtimestamp(float(timestamp))
             if action == "upload":
-                print "{}: uploaded to {} by {}".format(dt, backend, user)
+                print "{}: uploaded to {} by {}".format(dt.strftime("%a %b %e %X %Y +0000"), backend, user)
             else:
-                print "{}: downloaded from {} by {}".format(dt, backend, user)
+                print "{}: downloaded from {} by {}".format(dt.strftime("%a %b %e %X %Y +0000"), backend, user)
 
 def init():
     try:
