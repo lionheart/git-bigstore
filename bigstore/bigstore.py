@@ -6,6 +6,7 @@ import fnmatch
 from datetime import datetime
 
 from .backends import S3Backend
+from .backends import RackspaceBackend
 
 import git
 import boto
@@ -48,6 +49,11 @@ def default_backend():
         secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
         bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
         return S3Backend(access_key_id, secret_access_key, bucket_name)
+    elif backend_name == "rackspace":
+        username = g.config("bigstore.rackspace.username", file=".bigstore")
+        api_key = g.config("bigstore.rackspace.key", file=".bigstore")
+        container_name = g.config("bigstore.rackspace.container", file=".bigstore")
+        return RackspaceBackend(username, api_key, container_name)
     else:
         sys.stderr.write("error: s3 is currently the only supported backend")
         sys.exit(0)
@@ -227,9 +233,23 @@ def filter_smudge():
 
                 break
 
+def request_rackspace_credentials():
+    print
+    print "Enter your Rackspace Cloud Files Credentials"
+    print
+    username = raw_input("Username: ")
+    api_key = raw_input("API Key: ")
+    container = raw_input("Container: ")
+
+    g.config("bigstore.backend", "rackspace", file=".bigstore")
+    g.config("bigstore.rackspace.username", username, file=".bigstore")
+    g.config("bigstore.rackspace.key", api_key, file=".bigstore")
+    g.config("bigstore.rackspace.container", container, file=".bigstore")
+
 def request_s3_credentials():
-    print "Please enter your S3 Credentials"
-    print ""
+    print
+    print "Enter your Amazon S3 Credentials"
+    print
     s3_key = raw_input("Access Key: ")
     s3_secret = raw_input("Secret Key: ")
     s3_bucket = raw_input("Bucket Name: ")
@@ -261,19 +281,32 @@ def log():
 
 def init():
     try:
-        with open(".bigstore"):
-            pass
-    except IOError:
-        request_s3_credentials()
-    else:
-        try:
-            g.config("bigstore.s3.key", file=".bigstore")
-            g.config("bigstore.s3.secret", file=".bigstore")
-            g.config("bigstore.s3.bucket", file=".bigstore")
-        except git.exc.GitCommandError:
-            request_s3_credentials()
+        g.config("bigstore.backend", file=".bigstore")
+    except git.exc.GitCommandError:
+        print "What backend would you like to store your files with?"
+        print "(1) Amazon S3"
+        print "(2) Rackspace Cloud Files"
+        choice = None
+        while choice not in ["1", "2"]:
+            choice = raw_input("Enter your choice here: ")
+
+        if choice == "1":
+            try:
+                g.config("bigstore.s3.key", file=".bigstore")
+                g.config("bigstore.s3.secret", file=".bigstore")
+                g.config("bigstore.s3.bucket", file=".bigstore")
+            except git.exc.GitCommandError:
+                request_s3_credentials()
         else:
-            print "Reading credentials from .bigstore configuration file."
+            try:
+                g.config("bigstore.rackspace.username", file=".bigstore")
+                g.config("bigstore.rackspace.key", file=".bigstore")
+                g.config("bigstore.rackspace.container", file=".bigstore")
+            except git.exc.GitCommandError:
+                request_rackspace_credentials()
+
+    else:
+        print "Reading credentials from .bigstore configuration file."
 
     try:
         g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")

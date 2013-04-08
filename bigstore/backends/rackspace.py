@@ -17,6 +17,6 @@ class RackspaceBackend(object):
         self.key(hash).save_to_filename(file.name, callback=cb)
 
     def exists(self, hash):
-        return self.key(hash).exists()
+        return self.key(hash).etag is not None
 
 
