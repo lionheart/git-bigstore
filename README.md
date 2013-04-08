@@ -43,8 +43,6 @@ I've been using git-media for a few days now, and I've observed that it breaks d
 
 This made it a bit tough to collaborate with multiple people, since Git would try to clean things that had already been cleaned, and smudge things that had already been smudged. No good!
 
-Also, git-media hasn't been updated in a while. I promise to be a good maintainer!
-
 git-annex is another alternative, but it's solving a different problem and its implementation is a bit less dependent on Git itself. As a result, you essentially have to learn a whole new set of commands to work with it. I wanted to create something with as minimal complexity as possible.
 
 Copyright
