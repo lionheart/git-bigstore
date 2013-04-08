@@ -359,11 +359,9 @@ def init():
         print "Reading credentials from .bigstore configuration file."
 
     try:
-        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
+        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore")
     except git.exc.GitCommandError:
-        pass
-    else:
-        g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+        g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
 
     g.config("filter.bigstore.clean", "git-bigstore filter-clean")
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
