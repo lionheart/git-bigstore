@@ -20,7 +20,7 @@ Well, that was easy! Your Git repository is now prepared to track big files. To 
 
     $ echo "*.zip filter=bigstore" > .gitattributes
 
-After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with an identifier string starting with `bigstore$` and ending with the file's md5 hash.
+After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with relevant identifying information.
 
 git-bigstore won't automatically sync to S3 after a commit. To push changed files, just run:
 
