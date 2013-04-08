@@ -7,6 +7,7 @@ from datetime import datetime
 
 from .backends import S3Backend
 from .backends import RackspaceBackend
+from .backends import GoogleBackend
 
 import git
 import boto
@@ -259,6 +260,19 @@ def request_s3_credentials():
     g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
     g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
 
+def request_google_cloud_storage_credentials():
+    print
+    print "Enter your Google Cloud Storage Credentials"
+    print
+    google_key = raw_input("Access Key: ")
+    google_secret = raw_input("Secret Key: ")
+    google_bucket = raw_input("Bucket Name: ")
+
+    g.config("bigstore.backend", "google", file=".bigstore")
+    g.config("bigstore.google.key", google_key, file=".bigstore")
+    g.config("bigstore.google.secret", google_secret, file=".bigstore")
+    g.config("bigstore.google.bucket", google_bucket, file=".bigstore")
+
 def log():
     filename = sys.argv[2]
     trees = g.log("--pretty=format:%T", filename).split('\n')
@@ -285,9 +299,10 @@ def init():
     except git.exc.GitCommandError:
         print "What backend would you like to store your files with?"
         print "(1) Amazon S3"
-        print "(2) Rackspace Cloud Files"
+        print "(2) Google Cloud Storage"
+        print "(3) Rackspace Cloud Files"
         choice = None
-        while choice not in ["1", "2"]:
+        while choice not in ["1", "2", "3"]:
             choice = raw_input("Enter your choice here: ")
 
         if choice == "1":
@@ -297,7 +312,14 @@ def init():
                 g.config("bigstore.s3.bucket", file=".bigstore")
             except git.exc.GitCommandError:
                 request_s3_credentials()
-        else:
+        elif choice == "2":
+            try:
+                g.config("bigstore.google.key", file=".bigstore")
+                g.config("bigstore.google.secret", file=".bigstore")
+                g.config("bigstore.google.bucket", file=".bigstore")
+            except git.exc.GitCommandError:
+                request_google_cloud_storage_credentials()
+        elif choice == "3":
             try:
                 g.config("bigstore.rackspace.username", file=".bigstore")
                 g.config("bigstore.rackspace.key", file=".bigstore")
