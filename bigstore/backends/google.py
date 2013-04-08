@@ -8,6 +8,10 @@ class GoogleBackend(object):
         self.conn = boto.connect_gs(key, secret)
         self.bucket = boto.s3.bucket.Bucket(self.conn, bucket_name)
 
+    @property
+    def name(self):
+        return "google"
+
     def key(self, hash):
         return boto.s3.key.Key(self.bucket, "{}/{}".format(hash[:2], hash[2:]))
 

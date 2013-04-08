@@ -7,6 +7,10 @@ class RackspaceBackend(object):
         self.conn = cloudfiles.Connection(username=username, api_key=api_key)
         self.container = cloudfiles.Container(self.conn, name=container_name)
 
+    @property
+    def name(self):
+        return "rackspace"
+
     def key(self, hash):
         return cloudfiles.Object(container=self.container, name="{}/{}".format(hash[:2], hash[2:]))
 

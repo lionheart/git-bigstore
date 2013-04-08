@@ -55,8 +55,13 @@ def default_backend():
         api_key = g.config("bigstore.rackspace.key", file=".bigstore")
         container_name = g.config("bigstore.rackspace.container", file=".bigstore")
         return RackspaceBackend(username, api_key, container_name)
+    elif backend_name == "google":
+        access_key_id = g.config("bigstore.google.key", file=".bigstore")
+        secret_access_key = g.config("bigstore.google.secret", file=".bigstore")
+        bucket_name = g.config("bigstore.google.bucket", file=".bigstore")
+        return GoogleBackend(access_key_id, secret_access_key, bucket_name)
     else:
-        sys.stderr.write("error: s3 is currently the only supported backend")
+        sys.stderr.write("error: s3, google, and rackspace are currently the only supported backends")
         sys.exit(0)
 
 def object_directory(hash_function_name):
@@ -124,13 +129,13 @@ def push():
             # No notes exist for this object
             entries = []
 
+        backend = default_backend()
         for entry in entries:
-            if "upload" in entry:
+            if "upload" in entry and backend.name in entry:
                 break
         else:
             firstline, hash_function_name, hash = g.show(sha).split('\n')
             if firstline == 'bigstore':
-                backend = default_backend()
                 if not backend.exists(hash):
                     with open(object_filename(hash_function_name, hash)) as file:
                         backend.push(file, hash, cb=upload_callback(filename))
@@ -139,7 +144,7 @@ def push():
 
                     user_name = g.config("user.name")
                     user_email = g.config("user.email")
-                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	s3	{} <{}>".format(time.time(), user_name, user_email))
+                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	{}	{} <{}>".format(time.time(), backend.name, user_name, user_email))
 
     sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
@@ -179,7 +184,7 @@ def pull():
 
                             user_name = g.config("user.name")
                             user_email = g.config("user.email")
-                            g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	s3	{} <{}>".format(time.time(), user_name, user_email))
+                            g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	{}	{} <{}>".format(time.time(), backend.name, user_name, user_email))
                             g.add(filename)
 
                 break

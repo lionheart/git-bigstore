@@ -8,6 +8,10 @@ class S3Backend(object):
         self.conn = boto.connect_s3(key, secret)
         self.bucket = boto.s3.bucket.Bucket(self.conn, bucket_name)
 
+    @property
+    def name(self):
+        return "s3"
+
     def key(self, hash):
         return boto.s3.key.Key(self.bucket, "{}/{}".format(hash[:2], hash[2:]))
 
