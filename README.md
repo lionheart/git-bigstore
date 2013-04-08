@@ -27,6 +27,12 @@ To pull down remote changes:
 
     $ git bigstore pull
 
+If uploading and downloading everything isn't your cup of tea, you can also specify the paths you care about to these commands. For example, let's say you just want to download the Word and PDF files in your repo. This is what you'd do:
+
+    $ git bigstore pull *.pdf *.doc
+
+Makes sense.
+
 You can also view the upload and download history of any file tracked by bigstore.
 
     $ git bigstore log tsd20130403.pdf
