@@ -7,7 +7,7 @@ import git
 from bigstore import push, pull, filter_clean, filter_smudge, init, log
 
 def print_help():
-    print """usage: git bigstore push|pull|log|init"""
+    print """usage: git bigstore init|push|pull|log"""
 
 length = len(sys.argv)
 
