@@ -30,12 +30,8 @@ To pull down remote changes:
 You can also view the upload and download history of any file tracked by bigstore.
 
     $ git bigstore log tsd20130403.pdf
-    2013-04-08 06:58:59.990000: downloaded from google by Dan Loewenherz <dloewenherz@gmail.com>
-    2013-04-08 06:57:27.250000: uploaded to google by Dan Loewenherz <dloewenherz@gmail.com>
-    2013-04-07 19:18:54.290000: downloaded from s3 by Dan Loewenherz <dloewenherz@gmail.com>
-    2013-04-07 19:18:33.880000: uploaded to s3 by Dan Loewenherz <dloewenherz@gmail.com>
-    2013-04-07 17:37:06.860000: downloaded from s3 by Dan Loewenherz <dloewenherz@gmail.com>
-    2013-04-07 17:36:52.390000: uploaded to s3 by Dan Loewenherz <dloewenherz@gmail.com>
+    Mon Apr  8 11:48:51 2013 +0000: downloaded from google by Dan Loewenherz <dloewenherz@gmail.com>
+    Mon Apr  8 11:48:04 2013 +0000: uploaded to google by Dan Loewenherz <dloewenherz@gmail.com
 
 
 But "INSERT X HERE" already exists...
