@@ -13,13 +13,13 @@ To get started, set up an Amazon S3, Google Cloud Storage, or Rackspace Cloud ac
 
 At this point, you will be prompted for which backend you would like to use and your credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
 
-To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in S3, run this command in your repository root:
+To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in your backend, run this command in your repository root:
 
     $ echo "*.zip filter=bigstore" > .gitattributes
 
 After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with relevant identifying information.
 
-git-bigstore won't automatically sync to S3 after a commit. To push changed files, just run:
+git-bigstore won't automatically sync to your selected backend after a commit. To push changed files, just run:
 
     $ git bigstore push
 
