@@ -156,8 +156,12 @@ def push():
                 user_name = g.config("user.name")
                 user_email = g.config("user.email")
 
-                # Should the action be different if the file already exists on the backend?
-                g.notes("--ref=bigstore", "append", sha, "-m", "{}	upload	{}	{} <{}>".format(time.time(), backend.name, user_name, user_email))
+                # XXX Should the action ("upload") be different if the file already exists on the backend?
+                action = "upload"
+
+                # We use the timestamp as the first entry as it will help us
+                # sort the entries easily with the cat_sort_uniq merge.
+                g.notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
 
     sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
