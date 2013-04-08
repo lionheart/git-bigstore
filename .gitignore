@@ -1,0 +1,5 @@
+bigstore/
+bin/
+build/
+git_bigstore.egg-info/
+dist/
