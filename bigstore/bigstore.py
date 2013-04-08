@@ -196,30 +196,30 @@ def pull():
             try:
                 entries = g.notes("--ref=bigstore", "show", sha).split('\n')
             except git.exc.GitCommandError:
-                entries = []
+                pass
+            else:
+                for entry in entries:
+                    timestamp, action, backend_name, _ = entry.split('\t')
+                    if action == "upload":
+                        firstline, hash_function_name, hash = g.show(sha).split('\n')
+                        if firstline == 'bigstore':
+                            try:
+                                with open(object_filename(hash_function_name, hash)):
+                                    pass
+                            except IOError:
+                                backend = backend_for_name(backend_name)
+                                if backend.exists(hash):
+                                    with open(filename, 'wb') as file:
+                                        backend.pull(file, hash, cb=upload_callback(filename))
 
-            for entry in entries:
-                timestamp, action, backend_name, _ = entry.split('\t')
-                if action == "upload":
-                    firstline, hash_function_name, hash = g.show(sha).split('\n')
-                    if firstline == 'bigstore':
-                        try:
-                            with open(object_filename(hash_function_name, hash)):
-                                pass
-                        except IOError:
-                            backend = backend_for_name(backend_name)
-                            if backend.exists(hash):
-                                with open(filename, 'wb') as file:
-                                    backend.pull(file, hash, cb=upload_callback(filename))
+                                    sys.stderr.write("\n")
 
-                                sys.stderr.write("\n")
+                                    user_name = g.config("user.name")
+                                    user_email = g.config("user.email")
+                                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	{}	{} <{}>".format(time.time() + time.timezone, backend.name, user_name, user_email))
+                                    g.add(filename)
 
-                                user_name = g.config("user.name")
-                                user_email = g.config("user.email")
-                                g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	{}	{} <{}>".format(time.time() + time.timezone, backend.name, user_name, user_email))
-                                g.add(filename)
-
-                    break
+                        break
 
     sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
