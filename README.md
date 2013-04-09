@@ -36,8 +36,8 @@ Makes sense.
 You can also view the upload and download history of any file tracked by bigstore.
 
     $ git bigstore log tsd20130403.pdf
-    Mon Apr  8 11:48:51 2013 +0000: gs → Dan Loewenherz <dloewenherz@gmail.com>
-    Mon Apr  8 11:48:04 2013 +0000: gs ← Dan Loewenherz <dloewenherz@gmail.com
+    Mon Apr 8 11:48:51 2013 +0000: gs → Dan Loewenherz <dloewenherz@gmail.com>
+    Mon Apr 8 11:48:04 2013 +0000: gs ← Dan Loewenherz <dloewenherz@gmail.com
 
 
 But "INSERT X HERE" already exists...
