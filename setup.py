@@ -24,6 +24,8 @@ setup(
     ],
     install_requires=[
         'gitpython==0.3.2.RC1',
+        'boto',
+        'cloudfiles',
     ],
 )
 
