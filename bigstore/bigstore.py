@@ -329,7 +329,7 @@ def log():
 
             timestamp, action, backend, user = note.split('\t')
             dt = datetime.fromtimestamp(float(timestamp))
-            formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''), dt.strftime("%X %Y +0000"))
+            formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''), dt.strftime("%T %Y +0000"))
             if action == "upload":
                 print u"{}: {} \u2190 {}".format(formatted_date, backend, user)
             else:
