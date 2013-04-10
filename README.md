@@ -43,8 +43,6 @@ If uploading and downloading everything isn't your cup of tea, you can also spec
 
     $ git bigstore pull *.pdf *.doc
 
-Makes sense.
-
 You can also view the upload and download history of any file tracked by bigstore.
 
     $ git bigstore log tsd20130403.pdf
