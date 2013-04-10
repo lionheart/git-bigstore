@@ -407,6 +407,8 @@ def init():
 
     g.config("filter.bigstore.clean", "git-bigstore filter-clean")
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
+    g.config("filter.bigstore-compress.clean", "git-bigstore filter-clean")
+    g.config("filter.bigstore-compress.smudge", "git-bigstore filter-smudge")
 
     git_directory = g.rev_parse(git_dir=True)
     mkdir_p(object_directory(default_hash_function_name))
