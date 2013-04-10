@@ -29,7 +29,7 @@ If you're storing large text files (or something else that is easily compressabl
 
     $ echo "*.txt filter=bigstore-compress" > .gitattributes
 
-This will compress your file using the bzip compression algorithm before uploading to your backend, and will decompress after downloading.
+This will compress your file using bz2 before uploading to your backend, and will decompress after downloading.
 
 git-bigstore won't automatically sync to your selected backend after a commit. To push changed files, just run:
 
