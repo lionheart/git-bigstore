@@ -3,21 +3,33 @@ git-bigstore
 
 git-bigstore is an extension to Git that helps you track big files. For technical details, check out the [Wiki](https://github.com/aurorasoftware/git-bigstore/wiki/Bigstore).
 
+Requirements
+============
+
+* Python 2.7+
+* An Amazon S3, Google Cloud Storage, or Rackspace Cloud account
+
 Configuration
 -------------
 
-To get started, set up an Amazon S3, Google Cloud Storage, or Rackspace Cloud account to store stuff. Once you have your credentials available, you're ready to get started:
+First, install via pip.
 
     $ pip install git-bigstore
     $ git bigstore init
 
-At this point, you will be prompted for which backend you would like to use and your credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
+At this point, you will be prompted for which backend you would like to use (either S3, Google Storage, or Rackspace Cloudfiles) and your credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
 
 To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in your backend, run this command in your repository root:
 
     $ echo "*.zip filter=bigstore" > .gitattributes
 
 After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with relevant identifying information.
+
+If you're storing large text files (or something else that is easily compressable), specify the "bigstore-compress" filter instead of the normal "bigstore" one. E.g.,
+
+    $ echo "*.txt filter=bigstore-compress" > .gitattributes
+
+This will compress your file using the bzip compression algorithm before uploading to your backend, and will decompress after downloading.
 
 git-bigstore won't automatically sync to your selected backend after a commit. To push changed files, just run:
 
