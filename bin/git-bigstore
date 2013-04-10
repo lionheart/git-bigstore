@@ -3,6 +3,9 @@
 
 import os
 import sys
+import tempfile
+from subprocess import call
+
 import git
 from bigstore import push, pull, filter_clean, filter_smudge, init, log
 
@@ -34,6 +37,13 @@ if __name__ == "__main__":
         filter_clean()
     elif sys.argv[1] == "filter-smudge":
         filter_smudge()
+    elif sys.argv[1] == "show-image":
+        with tempfile.TemporaryFile(mode='w+r') as file:
+            call("convert {} jpg:- | jp2a --width=80 -".format(sys.argv[2]), stdout=file, shell=True)
+
+            file.seek(0)
+            for line in file:
+                sys.stdout.write(line)
     else:
         print_help()
 
