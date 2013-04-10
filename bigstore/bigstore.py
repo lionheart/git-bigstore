@@ -4,6 +4,7 @@ import time
 import os
 import fnmatch
 from datetime import datetime
+import bz2
 
 from .backends import S3Backend
 from .backends import RackspaceBackend
@@ -19,7 +20,7 @@ import shutil
 import sys
 import tempfile
 
-attribute_regex = re.compile(r'(^[^\s]*)')
+attribute_regex = re.compile(r'^([^\s]*) filter=(bigstore(?:-compress)?)')
 g = git.Git('.')
 git_directory = g.rev_parse(git_dir=True)
 
@@ -98,15 +99,16 @@ def upload_callback(filename):
     return inner
 
 def pathnames():
-    """ Generator that will yield pathnames for files tracked under gitattributes """
+    """ Generator that will yield pathnames for pathnames tracked under .gitattributes """
     filters = []
     try:
         with open(".gitattributes") as file:
             for line in file:
                 match = attribute_regex.match(line)
-                groups = match.groups()
-                if len(groups) > 0:
-                    filters.append(groups[0])
+                if match:
+                    groups = match.groups()
+                    if len(groups) > 0:
+                        filters.append((groups[0], groups[1]))
     except IOError:
         pass
     else:
@@ -117,10 +119,10 @@ def pathnames():
             _, _, sha = metadata.split(' ')
             filenames[filename] = sha
 
-        for filter in filters:
+        for wildcard, filter in filters:
             for filename, sha in filenames.iteritems():
-                if fnmatch.fnmatch(filename, filter):
-                    yield sha, filename
+                if fnmatch.fnmatch(filename, wildcard):
+                    yield sha, filename, filter == "bigstore-compress"
 
 def push():
     try:
@@ -138,7 +140,7 @@ def push():
     else:
         filters = []
 
-    for sha, filename in pathnames():
+    for sha, filename, compress in pathnames():
         should_process = len(filters) == 0 or any(fnmatch.fnmatch(filename, filter) for filter in filters)
         if should_process:
             try:
@@ -149,22 +151,39 @@ def push():
 
             backend = default_backend()
             for entry in entries:
-                if "upload" in entry and backend.name in entry:
+                timestamp, action, backend_name, _ = entry.split('\t')
+                if action in ("upload", "upload-compressed") and backend.name == backend_name:
                     break
             else:
                 firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
                 if firstline == 'bigstore':
                     if not backend.exists(hexdigest):
                         with open(object_filename(hash_function_name, hexdigest)) as file:
-                            backend.push(file, hexdigest, cb=upload_callback(filename))
+                            if compress:
+                                with tempfile.TemporaryFile() as compressed_file:
+                                    compressor = bz2.BZ2Compressor()
+                                    for line in file:
+                                        compressed_file.write(compressor.compress(line))
+
+                                    compressed_file.write(compressor.flush())
+                                    compressed_file.seek(0)
+
+                                    sys.stderr.write("compressed!\n")
+                                    backend.push(compressed_file, hexdigest, cb=upload_callback(filename))
+                            else:
+                                backend.push(file, hexdigest, cb=upload_callback(filename))
 
                         sys.stderr.write("\n")
 
                     user_name = g.config("user.name")
                     user_email = g.config("user.email")
 
-                    # XXX Should the action ("upload") be different if the file already exists on the backend?
-                    action = "upload"
+                    # XXX Should the action ("upload / upload-compress") be
+                    # different if the file already exists on the backend?
+                    if compress:
+                        action = "upload-compressed"
+                    else:
+                        action = "upload"
 
                     # We use the timestamp as the first entry as it will help us
                     # sort the entries easily with the cat_sort_uniq merge.
@@ -190,7 +209,7 @@ def pull():
     else:
         filters = []
 
-    for sha, filename in pathnames():
+    for sha, filename, compress in pathnames():
         should_process = len(filters) == 0 or any(fnmatch.fnmatch(filename, filter) for filter in filters)
         if should_process:
             try:
@@ -200,7 +219,7 @@ def pull():
             else:
                 for entry in entries:
                     timestamp, action, backend_name, _ = entry.split('\t')
-                    if action == "upload":
+                    if action in ("upload", "upload-compressed"):
                         firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
                         if firstline == 'bigstore':
                             try:
@@ -209,8 +228,18 @@ def pull():
                             except IOError:
                                 backend = backend_for_name(backend_name)
                                 if backend.exists(hexdigest):
-                                    with open(filename, 'wb') as file:
-                                        backend.pull(file, hexdigest, cb=upload_callback(filename))
+                                    if action == "upload-compressed":
+                                        with tempfile.TemporaryFile() as compressed_file:
+                                            backend.pull(compressed_file, hexdigest, cb=upload_callback(filename))
+                                            compressed_file.seek(0)
+
+                                            decompressor = bz2.BZ2Decompressor()
+                                            with open(filename, 'wb') as file:
+                                                for line in compressed_file:
+                                                    file.write(decompressor.decompress(line))
+                                    else:
+                                        with open(filename, 'wb') as file:
+                                            backend.pull(file, hexdigest, cb=upload_callback(filename))
 
                                     sys.stderr.write("\n")
 
@@ -250,7 +279,6 @@ def filter_clean():
         sys.stdout.write("bigstore\n")
         sys.stdout.write("{}\n".format(default_hash_function_name))
         sys.stdout.write("{}\n".format(hexdigest))
-
 
 def filter_smudge():
     firstline = sys.stdin.next()
@@ -330,7 +358,7 @@ def log():
             timestamp, action, backend, user = note.split('\t')
             dt = datetime.fromtimestamp(float(timestamp))
             formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''), dt.strftime("%T %Y +0000"))
-            if action == "upload":
+            if action in ("upload", "upload-compressed"):
                 print u"{}: {} \u2190 {}".format(formatted_date, backend, user)
             else:
                 print u"{}: {} \u2192 {}".format(formatted_date, backend, user)
