@@ -1,24 +1,26 @@
 #!/usr/bin/env python
 
-import time
-import os
-import fnmatch
 from datetime import datetime
-import bz2
-
-from .backends import S3Backend
-from .backends import RackspaceBackend
-from .backends import GoogleBackend
-
-import git
+from datetime import tzinfo
 import boto
+import bz2
 import errno
+import fnmatch
 import hashlib
 import os
 import re
 import shutil
 import sys
 import tempfile
+import time
+
+from .backends import S3Backend
+from .backends import RackspaceBackend
+from .backends import GoogleBackend
+
+from dateutil import tz as dateutil_tz
+import pytz
+import git
 
 attribute_regex = re.compile(r'^([^\s]*) filter=(bigstore(?:-compress)?)')
 g = git.Git('.')
@@ -356,8 +358,9 @@ def log():
                 continue
 
             timestamp, action, backend, user = note.split('\t')
-            dt = datetime.fromtimestamp(float(timestamp))
-            formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''), dt.strftime("%T %Y +0000"))
+            utc_dt = datetime.fromtimestamp(float(timestamp), tz=pytz.timezone("UTC"))
+            dt = utc_dt.astimezone(dateutil_tz.tzlocal())
+            formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''), dt.strftime("%T %Y %Z"))
             if action in ("upload", "upload-compressed"):
                 print u"{}: {} \u2190 {}".format(formatted_date, backend, user)
             else:
