@@ -46,8 +46,16 @@ If uploading and downloading everything isn't your cup of tea, you can also spec
 You can also view the upload and download history of any file tracked by bigstore.
 
     $ git bigstore log tsd20130403.pdf
-    Mon Apr 8 11:48:51 2013 +0000: gs → Dan Loewenherz <dloewenherz@gmail.com>
-    Mon Apr 8 11:48:04 2013 +0000: gs ← Dan Loewenherz <dloewenherz@gmail.com
+    (ebffdc) Fri Apr 12 11:00:39 2013 PDT: gs ← Dan Loewenherz <dloewenherz@gmail.com>
+    (f9ffb5) Wed Apr 10 18:29:56 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
+    (95aeaf) Wed Apr 10 18:28:42 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
+    (95aeaf) Wed Apr 10 18:27:38 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
+    (95aeaf) Wed Apr 10 17:55:00 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
+    (95aeaf) Wed Apr 10 17:53:40 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
+    (95aeaf) Wed Apr 10 17:49:49 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
+    (95aeaf) Wed Apr 10 17:49:13 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
+    (f9ffb5) Wed Apr 10 10:29:30 2013 PDT: gs ← Dan Loewenherz <dloewenherz@gmail.com>
+    (95aeaf) Wed Apr 10 09:46:46 2013 PDT: gs ← Dan Loewenherz <dloewenherz@gmail.com>
 
 
 But "INSERT X HERE" already exists...
