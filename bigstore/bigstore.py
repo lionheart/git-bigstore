@@ -129,14 +129,11 @@ def pathnames():
 
 def push():
     try:
-        sys.stderr.write("pulling bigstore metadata...")
         g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
         g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
-        sys.stderr.write("done\n")
     else:
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
-        sys.stderr.write("done\n")
 
     if len(sys.argv) > 2:
         filters = sys.argv[2:]
@@ -196,20 +193,15 @@ def push():
                         # sort the entries easily with the cat_sort_uniq merge.
                         g.notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
 
-    sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
-    sys.stderr.write("done\n")
 
 def pull():
     try:
-        sys.stderr.write("pulling bigstore metadata...")
         g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
         g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
-        sys.stderr.write("done\n")
     else:
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
-        sys.stderr.write("done\n")
 
     if len(sys.argv) > 2:
         filters = sys.argv[2:]
@@ -257,9 +249,7 @@ def pull():
 
                         break
 
-    sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
-    sys.stderr.write("done\n")
 
 def filter_clean():
     firstline = sys.stdin.next()
