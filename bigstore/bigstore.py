@@ -158,39 +158,43 @@ def push():
                 if action in ("upload", "upload-compressed") and backend.name == backend_name:
                     break
             else:
-                firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
-                if firstline == 'bigstore':
-                    if not backend.exists(hexdigest):
-                        with open(object_filename(hash_function_name, hexdigest)) as file:
-                            if compress:
-                                with tempfile.TemporaryFile() as compressed_file:
-                                    compressor = bz2.BZ2Compressor()
-                                    for line in file:
-                                        compressed_file.write(compressor.compress(line))
+                try:
+                    firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
+                except ValueError:
+                    pass
+                else:
+                    if firstline == 'bigstore':
+                        if not backend.exists(hexdigest):
+                            with open(object_filename(hash_function_name, hexdigest)) as file:
+                                if compress:
+                                    with tempfile.TemporaryFile() as compressed_file:
+                                        compressor = bz2.BZ2Compressor()
+                                        for line in file:
+                                            compressed_file.write(compressor.compress(line))
 
-                                    compressed_file.write(compressor.flush())
-                                    compressed_file.seek(0)
+                                        compressed_file.write(compressor.flush())
+                                        compressed_file.seek(0)
 
-                                    sys.stderr.write("compressed!\n")
-                                    backend.push(compressed_file, hexdigest, cb=upload_callback(filename))
-                            else:
-                                backend.push(file, hexdigest, cb=upload_callback(filename))
+                                        sys.stderr.write("compressed!\n")
+                                        backend.push(compressed_file, hexdigest, cb=upload_callback(filename))
+                                else:
+                                    backend.push(file, hexdigest, cb=upload_callback(filename))
 
-                        sys.stderr.write("\n")
+                            sys.stderr.write("\n")
 
-                    user_name = g.config("user.name")
-                    user_email = g.config("user.email")
+                        user_name = g.config("user.name")
+                        user_email = g.config("user.email")
 
-                    # XXX Should the action ("upload / upload-compress") be
-                    # different if the file already exists on the backend?
-                    if compress:
-                        action = "upload-compressed"
-                    else:
-                        action = "upload"
+                        # XXX Should the action ("upload / upload-compress") be
+                        # different if the file already exists on the backend?
+                        if compress:
+                            action = "upload-compressed"
+                        else:
+                            action = "upload"
 
-                    # We use the timestamp as the first entry as it will help us
-                    # sort the entries easily with the cat_sort_uniq merge.
-                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
+                        # We use the timestamp as the first entry as it will help us
+                        # sort the entries easily with the cat_sort_uniq merge.
+                        g.notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
 
     sys.stderr.write("pushing bigstore metadata...")
     g.push("origin", "refs/notes/bigstore")
