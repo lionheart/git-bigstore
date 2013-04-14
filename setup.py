@@ -9,12 +9,13 @@ except ImportError:
     from distutils.core import setup
 
 setup(
-    name = 'git-bigstore',
-    version = metadata.__version__,
-    license = metadata.__license__,
-    description = "Track big files with Git.",
-    author = metadata.__author__,
-    author_email = metadata.__email__,
+    name='git-bigstore',
+    version=metadata.__version__,
+    license=metadata.__license__,
+    description="Track big files with Git.",
+    author=metadata.__author__,
+    author_email=metadata.__email__,
+    url="http://aurora.io/git-bigstore",
     packages=[
         'bigstore.backends',
         'bigstore',
