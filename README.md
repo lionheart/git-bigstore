@@ -46,6 +46,7 @@ If uploading and downloading everything isn't your cup of tea, you can also spec
 You can also view the upload and download history of any file tracked by bigstore.
 
     $ git bigstore log tsd20130403.pdf
+    (946cc6) Sat Apr 13 21:52:21 2013 PDT: gs ← Dan Loewenherz <dloewenherz@gmail.com>
     (ebffdc) Fri Apr 12 11:00:39 2013 PDT: gs ← Dan Loewenherz <dloewenherz@gmail.com>
     (f9ffb5) Wed Apr 10 18:29:56 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
     (95aeaf) Wed Apr 10 18:28:42 2013 PDT: gs → Dan Loewenherz <dloewenherz@gmail.com>
