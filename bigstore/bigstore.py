@@ -30,7 +30,7 @@ git_directory = g.rev_parse(git_dir=True)
 try:
     default_hash_function_name = g.config("bigstore.hash_function")
 except git.exc.GitCommandError:
-    default_hash_function_name = 'sha256'
+    default_hash_function_name = 'sha1'
 
 hash_functions = {
     'md5': hashlib.md5,
