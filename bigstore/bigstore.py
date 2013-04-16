@@ -154,9 +154,14 @@ def push():
 
             backend = default_backend()
             for entry in entries:
-                timestamp, action, backend_name, _ = entry.split('\t')
-                if action in ("upload", "upload-compressed") and backend.name == backend_name:
-                    break
+                try:
+                    timestamp, action, backend_name, _ = entry.split('\t')
+                except ValueError:
+                    # probably a blank line
+                    pass
+                else:
+                    if action in ("upload", "upload-compressed") and backend.name == backend_name:
+                        break
             else:
                 try:
                     firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
