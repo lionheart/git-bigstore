@@ -2,26 +2,27 @@
 
 from datetime import datetime
 from datetime import tzinfo
-import boto
 import bz2
 import errno
 import fnmatch
 import hashlib
+import math
+import operator
 import os
 import re
 import shutil
 import sys
 import tempfile
 import time
-import operator
 
 from .backends import S3Backend
 from .backends import RackspaceBackend
 from .backends import GoogleBackend
 
 from dateutil import tz as dateutil_tz
-import pytz
+import boto
 import git
+import pytz
 
 attribute_regex = re.compile(r'^([^\s]*) filter=(bigstore(?:-compress)?)')
 g = git.Git('.')
