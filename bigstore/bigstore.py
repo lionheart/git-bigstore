@@ -424,7 +424,11 @@ def init():
     try:
         g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore")
     except git.exc.GitCommandError:
-        g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+        try:
+            g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+        except git.exc.GitCommandError:
+            # Occurs when notes already exist for this ref.
+            print "Bigstore has already been initialized."
 
     g.config("filter.bigstore.clean", "git-bigstore filter-clean")
     g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
