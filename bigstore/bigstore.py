@@ -255,10 +255,6 @@ def pull():
                                             backend.pull(file, hexdigest, cb=upload_callback(filename))
 
                                     sys.stderr.write("\n")
-
-                                    user_name = g.config("user.name")
-                                    user_email = g.config("user.email")
-                                    g.notes("--ref=bigstore", "append", sha, "-m", "{}	download	{}	{} <{}>".format(time.time() + time.timezone, backend.name, user_name, user_email))
                                     g.add(filename)
 
                         break
