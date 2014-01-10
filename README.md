@@ -75,5 +75,5 @@ Copyright
 
 Copyright 2013 Lionheart Software LLC <hi@lionheartsw.com>.
 
-Licensed under Apache 2.0. See LICENSE for more details.
+Licensed under Apache 2.0. See [LICENSE](LICENSE) for more details.
 
