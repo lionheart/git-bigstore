@@ -133,8 +133,13 @@ def push():
         sys.stderr.write("pulling bigstore metadata...")
         g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
-        g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
-        sys.stderr.write("done\n")
+        try:
+            # Create a ref so that we can push up to the repo.
+            g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+            sys.stderr.write("done\n")
+        except git.exc.GitCommandError:
+            # If it fails silently, an existing notes object already exists.
+            sys.stderr.write("\n")
     else:
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
         sys.stderr.write("done\n")
