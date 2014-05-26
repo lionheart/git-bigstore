@@ -216,7 +216,7 @@ def pull():
         sys.stderr.write("pulling bigstore metadata...")
         g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
-        g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+        g.notes("--ref=bigstore", "add", "-m", "bigstore")
         sys.stderr.write("done\n")
     else:
         g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
