@@ -149,6 +149,7 @@ def push():
     else:
         filters = []
 
+    # Should show a message to the user if not in the base directory.
     for sha, filename, compress in pathnames():
         should_process = len(filters) == 0 or any(fnmatch.fnmatch(filename, filter) for filter in filters)
         if should_process:
