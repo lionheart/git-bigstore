@@ -96,7 +96,7 @@ def upload_callback(filename):
     def inner(size, total):
         sys.stderr.write("\r")
         if total > 0:
-            sys.stderr.write("{: <4.0%}\t{}".format(size / float(total), filename))
+            sys.stderr.write("{: <4.0%}\t{}\t({: {width}}/{: {width}})".format(size / float(total), filename, size, total, width=int(math.log(total, 10))-2))
         else:
             sys.stderr.write("?%\t{}".format(filename))
 
@@ -365,17 +365,22 @@ def log():
         entry = g.ls_tree('-r', tree, filename)
         metadata, filename = entry.split('\t')
         _, _, sha = metadata.split(' ')
-        notes = g.notes("--ref=bigstore", "show", sha).split('\n')
-        notes.reverse()
-        for note in notes:
-            if note == '':
-                continue
+        try:
+            notes = g.notes("--ref=bigstore", "show", sha).split('\n')
+        except git.exc.GitCommandError:
+            # No note found for object.
+            pass
+        else:
+            notes.reverse()
+            for note in notes:
+                if note == '':
+                    continue
 
-            timestamp, action, backend, user = note.split('\t')
-            utc_dt = datetime.fromtimestamp(float(timestamp), tz=pytz.timezone("UTC"))
-            dt = utc_dt.astimezone(dateutil_tz.tzlocal())
-            formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''), dt.strftime("%T %Y %Z"))
-            entries.append((dt, sha, formatted_date, action, backend, user))
+                timestamp, action, backend, user = note.split('\t')
+                utc_dt = datetime.fromtimestamp(float(timestamp), tz=pytz.timezone("UTC"))
+                dt = utc_dt.astimezone(dateutil_tz.tzlocal())
+                formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''), dt.strftime("%T %Y %Z"))
+                entries.append((dt, sha, formatted_date, action, backend, user))
 
     sorted_entries = sorted(entries, key=operator.itemgetter(0), reverse=True)
     for dt, sha, formatted_date, action, backend, user in sorted_entries:
