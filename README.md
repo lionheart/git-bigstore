@@ -59,6 +59,40 @@ You can also view the upload and download history of any file tracked by bigstor
     (95aeaf) Wed Apr 10 09:46:46 2013 PDT: gs ← Dan Loewenherz <dloewenherz@gmail.com>
 
 
+Backend-Specific Instructions
+-----------------------------
+
+### Amazon S3
+
+You probably will want to set up an IAM user to manage the bucket you'll be using to upload your media. Here's an example policy that has worked for me.
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Stmt1401201989000",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectAcl",
+        "s3:ListBucket",
+        "s3:PutObject",
+        "s3:PutObjectAcl",
+        "s3:AbortMultipartUpload",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListMultipartUploadParts"
+      ],
+      "Resource": [
+        "arn:aws:s3:::BUCKET",
+        "arn:aws:s3:::BUCKET/*"
+      ]
+    }
+  ]
+}
+```
+
+
 But "INSERT X HERE" already exists...
 ---------------------------------
 
