@@ -64,7 +64,7 @@ Backend-Specific Instructions
 
 ### Amazon S3
 
-You probably will want to set up an IAM user to manage the bucket you'll be using to upload your media. Here's an example policy that has worked for me.
+You probably will want to set up an IAM user to manage the bucket you'll be using to upload your media. Here's an example user policy:
 
 ```json
 {
