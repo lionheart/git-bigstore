@@ -24,7 +24,7 @@ import boto
 import git
 import pytz
 
-attribute_regex = re.compile(r'^([^\s]*) filter=(bigstore(?:-compress)?)')
+attribute_regex = re.compile(r'^([^\s]*) .+ filter=(bigstore(?:-compress)?)$')
 g = git.Git('.')
 git_directory = g.rev_parse(git_dir=True)
 
@@ -86,7 +86,8 @@ def object_filename(hash_function_name, hexdigest):
 def mkdir_p(path):
     try:
         os.makedirs(path)
-    except OSError as exc: # Python >2.5
+    except OSError as exc:
+        # Python >2.5
         if exc.errno == errno.EEXIST and os.path.isdir(path):
             pass
         else:
@@ -114,6 +115,8 @@ def pathnames():
                     if len(groups) > 0:
                         filters.append((groups[0], groups[1]))
     except IOError:
+        # The .gitattributes file might not exist. Should prompt the user to run
+        # "git bigstore init"?
         pass
     else:
         results = g.ls_tree("HEAD", r=True).split('\n')
