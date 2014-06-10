@@ -107,7 +107,7 @@ git-annex is another alternative, but it's solving a different problem and its i
 Copyright
 ---------
 
-Copyright 2013 Lionheart Software LLC <hi@lionheartsw.com>.
+Copyright 2014 Lionheart Software LLC <hi@lionheartsw.com>.
 
 Licensed under Apache 2.0. See [LICENSE](LICENSE) for more details.
 
