@@ -1,4 +1,7 @@
-import cloudfiles
+try:
+    import cloudfiles
+except ImportError:
+    pass
 
 class RackspaceBackend(object):
     def __init__(self, username, api_key, container_name):

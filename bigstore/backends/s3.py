@@ -1,4 +1,7 @@
-import boto
+try:
+    import boto
+except ImportError:
+    pass
 
 class S3Backend(object):
     def __init__(self, key, secret, bucket_name):
