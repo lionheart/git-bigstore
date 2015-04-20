@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-Django Statictastic
-~~~~~~~~~~~~~~~~~~~
-
-:copyright: © 2012 Aurora Software
-"""
-
 from .metadata import (
     __author__,
     __copyright__,

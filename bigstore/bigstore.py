@@ -25,11 +25,12 @@ import git
 import pytz
 
 attribute_regex = re.compile(r'^([^\s]*) .+ filter=(bigstore(?:-compress)?)$')
-g = git.Git('.')
-git_directory = g.rev_parse(git_dir=True)
+
+g = lambda: git.Git('.')
+git_directory = lambda git_instance: git_instance.rev_parse(git_dir=True)
 
 try:
-    default_hash_function_name = g.config("bigstore.hash_function")
+    default_hash_function_name = g().config("bigstore.hash_function")
 except git.exc.GitCommandError:
     default_hash_function_name = 'sha1'
 
@@ -46,7 +47,7 @@ default_hash_function = hash_functions[default_hash_function_name]
 
 def default_backend():
     try:
-        backend_name = g.config("bigstore.backend", file=".bigstore")
+        backend_name = g().config("bigstore.backend", file=".bigstore")
     except git.exc.GitCommandError:
         backend_name = None
 
@@ -60,25 +61,25 @@ def default_backend():
 
 def backend_for_name(name):
     if name == "s3":
-        access_key_id = g.config("bigstore.s3.key", file=".bigstore")
-        secret_access_key = g.config("bigstore.s3.secret", file=".bigstore")
-        bucket_name = g.config("bigstore.s3.bucket", file=".bigstore")
+        access_key_id = g().config("bigstore.s3.key", file=".bigstore")
+        secret_access_key = g().config("bigstore.s3.secret", file=".bigstore")
+        bucket_name = g().config("bigstore.s3.bucket", file=".bigstore")
         return S3Backend(access_key_id, secret_access_key, bucket_name)
     elif name == "cloudfiles":
-        username = g.config("bigstore.cloudfiles.username", file=".bigstore")
-        api_key = g.config("bigstore.cloudfiles.key", file=".bigstore")
-        container_name = g.config("bigstore.cloudfiles.container", file=".bigstore")
+        username = g().config("bigstore.cloudfiles.username", file=".bigstore")
+        api_key = g().config("bigstore.cloudfiles.key", file=".bigstore")
+        container_name = g().config("bigstore.cloudfiles.container", file=".bigstore")
         return RackspaceBackend(username, api_key, container_name)
     elif name == "gs":
-        access_key_id = g.config("bigstore.gs.key", file=".bigstore")
-        secret_access_key = g.config("bigstore.gs.secret", file=".bigstore")
-        bucket_name = g.config("bigstore.gs.bucket", file=".bigstore")
+        access_key_id = g().config("bigstore.gs.key", file=".bigstore")
+        secret_access_key = g().config("bigstore.gs.secret", file=".bigstore")
+        bucket_name = g().config("bigstore.gs.bucket", file=".bigstore")
         return GoogleBackend(access_key_id, secret_access_key, bucket_name)
     else:
         return None
 
 def object_directory(hash_function_name):
-    return os.path.join(git_directory, "bigstore", "objects", hash_function_name)
+    return os.path.join(git_directory(), "bigstore", "objects", hash_function_name)
 
 def object_filename(hash_function_name, hexdigest):
     return os.path.join(object_directory(hash_function_name), hexdigest[:2], hexdigest[2:])
@@ -119,7 +120,7 @@ def pathnames():
         # "git bigstore init"?
         pass
     else:
-        results = g.ls_tree("HEAD", r=True).split('\n')
+        results = g().ls_tree("HEAD", r=True).split('\n')
         filenames = {}
         for result in results:
             metadata, filename = result.split('\t')
@@ -134,17 +135,17 @@ def pathnames():
 def push():
     try:
         sys.stderr.write("pulling bigstore metadata...")
-        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
+        g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
         try:
             # Create a ref so that we can push up to the repo.
-            g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+            g().notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
             sys.stderr.write("done\n")
         except git.exc.GitCommandError:
             # If it fails silently, an existing notes object already exists.
             sys.stderr.write("\n")
     else:
-        g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+        g().notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
         sys.stderr.write("done\n")
 
     if len(sys.argv) > 2:
@@ -157,7 +158,7 @@ def push():
         should_process = len(filters) == 0 or any(fnmatch.fnmatch(filename, filter) for filter in filters)
         if should_process:
             try:
-                entries = g.notes("--ref=bigstore", "show", sha).split('\n')
+                entries = g().notes("--ref=bigstore", "show", sha).split('\n')
             except git.exc.GitCommandError:
                 # No notes exist for this object
                 entries = []
@@ -174,7 +175,7 @@ def push():
                         break
             else:
                 try:
-                    firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
+                    firstline, hash_function_name, hexdigest = g().show(sha).split('\n')
                 except ValueError:
                     pass
                 else:
@@ -197,8 +198,8 @@ def push():
 
                             sys.stderr.write("\n")
 
-                        user_name = g.config("user.name")
-                        user_email = g.config("user.email")
+                        user_name = g().config("user.name")
+                        user_email = g().config("user.email")
 
                         # XXX Should the action ("upload / upload-compress") be
                         # different if the file already exists on the backend?
@@ -209,21 +210,21 @@ def push():
 
                         # We use the timestamp as the first entry as it will help us
                         # sort the entries easily with the cat_sort_uniq merge.
-                        g.notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
+                        g().notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
 
     sys.stderr.write("pushing bigstore metadata...")
-    g.push("origin", "refs/notes/bigstore")
+    g().push("origin", "refs/notes/bigstore")
     sys.stderr.write("done\n")
 
 def pull():
     try:
         sys.stderr.write("pulling bigstore metadata...")
-        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
+        g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
-        g.notes("--ref=bigstore", "add", "-m", "bigstore")
+        g().notes("--ref=bigstore", "add", "-m", "bigstore")
         sys.stderr.write("done\n")
     else:
-        g.notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+        g().notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
         sys.stderr.write("done\n")
 
     if len(sys.argv) > 2:
@@ -235,14 +236,14 @@ def pull():
         should_process = len(filters) == 0 or any(fnmatch.fnmatch(filename, filter) for filter in filters)
         if should_process:
             try:
-                entries = g.notes("--ref=bigstore", "show", sha).split('\n')
+                entries = g().notes("--ref=bigstore", "show", sha).split('\n')
             except git.exc.GitCommandError:
                 pass
             else:
                 for entry in entries:
                     timestamp, action, backend_name, _ = entry.split('\t')
                     if action in ("upload", "upload-compressed"):
-                        firstline, hash_function_name, hexdigest = g.show(sha).split('\n')
+                        firstline, hash_function_name, hexdigest = g().show(sha).split('\n')
                         if firstline == 'bigstore':
                             try:
                                 with open(object_filename(hash_function_name, hexdigest)):
@@ -264,12 +265,12 @@ def pull():
                                             backend.pull(file, hexdigest, cb=upload_callback(filename))
 
                                     sys.stderr.write("\n")
-                                    g.add(filename)
+                                    g().add(filename)
 
                         break
 
     sys.stderr.write("pushing bigstore metadata...")
-    g.push("origin", "refs/notes/bigstore")
+    g().push("origin", "refs/notes/bigstore")
     sys.stderr.write("done\n")
 
 def filter_clean():
@@ -329,10 +330,10 @@ def request_rackspace_credentials():
     api_key = raw_input("API Key: ")
     container = raw_input("Container: ")
 
-    g.config("bigstore.backend", "cloudfiles", file=".bigstore")
-    g.config("bigstore.cloudfiles.username", username, file=".bigstore")
-    g.config("bigstore.cloudfiles.key", api_key, file=".bigstore")
-    g.config("bigstore.cloudfiles.container", container, file=".bigstore")
+    g().config("bigstore.backend", "cloudfiles", file=".bigstore")
+    g().config("bigstore.cloudfiles.username", username, file=".bigstore")
+    g().config("bigstore.cloudfiles.key", api_key, file=".bigstore")
+    g().config("bigstore.cloudfiles.container", container, file=".bigstore")
 
 def request_s3_credentials():
     print
@@ -342,10 +343,10 @@ def request_s3_credentials():
     s3_secret = raw_input("Secret Key: ")
     s3_bucket = raw_input("Bucket Name: ")
 
-    g.config("bigstore.backend", "s3", file=".bigstore")
-    g.config("bigstore.s3.key", s3_key, file=".bigstore")
-    g.config("bigstore.s3.secret", s3_secret, file=".bigstore")
-    g.config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+    g().config("bigstore.backend", "s3", file=".bigstore")
+    g().config("bigstore.s3.key", s3_key, file=".bigstore")
+    g().config("bigstore.s3.secret", s3_secret, file=".bigstore")
+    g().config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
 
 def request_google_cloud_storage_credentials():
     print
@@ -355,21 +356,21 @@ def request_google_cloud_storage_credentials():
     google_secret = raw_input("Secret Key: ")
     google_bucket = raw_input("Bucket Name: ")
 
-    g.config("bigstore.backend", "gs", file=".bigstore")
-    g.config("bigstore.gs.key", google_key, file=".bigstore")
-    g.config("bigstore.gs.secret", google_secret, file=".bigstore")
-    g.config("bigstore.gs.bucket", google_bucket, file=".bigstore")
+    g().config("bigstore.backend", "gs", file=".bigstore")
+    g().config("bigstore.gs.key", google_key, file=".bigstore")
+    g().config("bigstore.gs.secret", google_secret, file=".bigstore")
+    g().config("bigstore.gs.bucket", google_bucket, file=".bigstore")
 
 def log():
     filename = sys.argv[2]
-    trees = g.log("--pretty=format:%T", filename).split('\n')
+    trees = g().log("--pretty=format:%T", filename).split('\n')
     entries = []
     for tree in trees:
-        entry = g.ls_tree('-r', tree, filename)
+        entry = g().ls_tree('-r', tree, filename)
         metadata, filename = entry.split('\t')
         _, _, sha = metadata.split(' ')
         try:
-            notes = g.notes("--ref=bigstore", "show", sha).split('\n')
+            notes = g().notes("--ref=bigstore", "show", sha).split('\n')
         except git.exc.GitCommandError:
             # No note found for object.
             pass
@@ -396,7 +397,7 @@ def log():
 
 def init():
     try:
-        g.config("bigstore.backend", file=".bigstore")
+        g().config("bigstore.backend", file=".bigstore")
     except git.exc.GitCommandError:
         print "What backend would you like to store your files with?"
         print "(1) Amazon S3"
@@ -408,23 +409,23 @@ def init():
 
         if choice == "1":
             try:
-                g.config("bigstore.s3.key", file=".bigstore")
-                g.config("bigstore.s3.secret", file=".bigstore")
-                g.config("bigstore.s3.bucket", file=".bigstore")
+                g().config("bigstore.s3.key", file=".bigstore")
+                g().config("bigstore.s3.secret", file=".bigstore")
+                g().config("bigstore.s3.bucket", file=".bigstore")
             except git.exc.GitCommandError:
                 request_s3_credentials()
         elif choice == "2":
             try:
-                g.config("bigstore.gs.key", file=".bigstore")
-                g.config("bigstore.gs.secret", file=".bigstore")
-                g.config("bigstore.gs.bucket", file=".bigstore")
+                g().config("bigstore.gs.key", file=".bigstore")
+                g().config("bigstore.gs.secret", file=".bigstore")
+                g().config("bigstore.gs.bucket", file=".bigstore")
             except git.exc.GitCommandError:
                 request_google_cloud_storage_credentials()
         elif choice == "3":
             try:
-                g.config("bigstore.cloudfiles.username", file=".bigstore")
-                g.config("bigstore.cloudfiles.key", file=".bigstore")
-                g.config("bigstore.cloudfiles.container", file=".bigstore")
+                g().config("bigstore.cloudfiles.username", file=".bigstore")
+                g().config("bigstore.cloudfiles.key", file=".bigstore")
+                g().config("bigstore.cloudfiles.container", file=".bigstore")
             except git.exc.GitCommandError:
                 request_rackspace_credentials()
 
@@ -432,19 +433,18 @@ def init():
         print "Reading credentials from .bigstore configuration file."
 
     try:
-        g.fetch("origin", "refs/notes/bigstore:refs/notes/bigstore")
+        g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore")
     except git.exc.GitCommandError:
         try:
-            g.notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+            g().notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
         except git.exc.GitCommandError:
             # Occurs when notes already exist for this ref.
             print "Bigstore has already been initialized."
 
-    g.config("filter.bigstore.clean", "git-bigstore filter-clean")
-    g.config("filter.bigstore.smudge", "git-bigstore filter-smudge")
-    g.config("filter.bigstore-compress.clean", "git-bigstore filter-clean")
-    g.config("filter.bigstore-compress.smudge", "git-bigstore filter-smudge")
+    g().config("filter.bigstore.clean", "git-bigstore filter-clean")
+    g().config("filter.bigstore.smudge", "git-bigstore filter-smudge")
+    g().config("filter.bigstore-compress.clean", "git-bigstore filter-clean")
+    g().config("filter.bigstore-compress.smudge", "git-bigstore filter-smudge")
 
-    git_directory = g.rev_parse(git_dir=True)
     mkdir_p(object_directory(default_hash_function_name))
 
