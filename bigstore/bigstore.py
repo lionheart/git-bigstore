@@ -79,7 +79,7 @@ def backend_for_name(name):
         return None
 
 def object_directory(hash_function_name):
-    return os.path.join(git_directory(), "bigstore", "objects", hash_function_name)
+    return os.path.join(git_directory(g()), "bigstore", "objects", hash_function_name)
 
 def object_filename(hash_function_name, hexdigest):
     return os.path.join(object_directory(hash_function_name), hexdigest[:2], hexdigest[2:])
