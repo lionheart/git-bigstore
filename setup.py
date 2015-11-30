@@ -17,6 +17,7 @@ setup(
     description="Track big files with Git.",
     author=metadata['__author__'],
     author_email=metadata['__email__'],
+    url="https://github.com/lionheart/git-bigstore",
     packages=[
         'bigstore.backends',
         'bigstore',
