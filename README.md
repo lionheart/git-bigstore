@@ -12,10 +12,17 @@ Requirements
 Configuration
 -------------
 
-First, install via pip.
+First, install the requirements via pip.
 
-    $ pip install git-bigstore
-    $ git bigstore init
+    pip install gitpython==0.3.2.RC1 boto==2.8.0 python-dateutil==1.5 pytz==2012h python-cloudfiles==1.7.10
+
+Then, install bigstore.
+
+    pip install git-bigstore
+
+Finally, go to the directory root of your Git repo and initialize bigstore.
+
+    git bigstore init
 
 At this point, you will be prompted for which backend you would like to use (either S3, Google Storage, or Rackspace Cloudfiles) and your credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
 
