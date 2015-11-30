@@ -24,7 +24,7 @@ import boto
 import git
 import pytz
 
-attribute_regex = re.compile(r'^([^\s]*) .+ filter=(bigstore(?:-compress)?)$')
+attribute_regex = re.compile(r'^([^\s]*).+filter=(bigstore(?:-compress)?)')
 
 g = lambda: git.Git('.')
 git_directory = lambda git_instance: git_instance.rev_parse(git_dir=True)
