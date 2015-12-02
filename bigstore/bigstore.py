@@ -98,7 +98,7 @@ def upload_callback(filename):
     def inner(size, total):
         sys.stderr.write("\r")
         if total > 0:
-            sys.stderr.write("{: <4.0%}\t{}\t({: {width}}/{: {width}})".format(size / float(total), filename, size, total, width=int(math.log(total, 10))-2))
+            sys.stderr.write("{: <4.0%}\t{}\t\t({: {width}}/{: {width}})".format(size / float(total), filename, size, total, width=int(math.log(total, 10))-2))
         else:
             sys.stderr.write("?%\t{}".format(filename))
 
