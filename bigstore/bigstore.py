@@ -20,7 +20,6 @@ from .backends import RackspaceBackend
 from .backends import GoogleBackend
 
 from dateutil import tz as dateutil_tz
-import boto
 import git
 import pytz
 
@@ -94,15 +93,20 @@ def mkdir_p(path):
         else:
             raise
 
-def upload_callback(filename):
-    def inner(size, total):
-        sys.stderr.write("\r")
-        if total > 0:
-            sys.stderr.write("{: <4.0%}\t{}\t\t({: {width}}/{: {width}})".format(size / float(total), filename, size, total, width=max(int(math.log(total, 10))-2, 2)))
-        else:
-            sys.stderr.write("?%\t{}".format(filename))
+class ProgressPercentage(object):
+    def __init__(self, filename):
+        self.filename = filename
+        self.size = float(os.path.getsize(filename))
+        self.seen_so_far = 0
 
-    return inner
+    def __call__(self, bytes_amount):
+        self.seen_so_far += bytes_amount
+        if self.size:
+            percentage = (self.seen_so_far / self.size) * 100
+            sys.stdout.write("\r{}  {} / {}  ({: <2.0%})".format(self.filename, self.seen_so_far, self.size, percentage))
+        else:
+            sys.stdout.write("\r{}  {}" % (self.filename, self.seen_so_far))
+        sys.stdout.flush()
 
 def pathnames():
     """ Generator that will yield pathnames for pathnames tracked under .gitattributes """
@@ -192,9 +196,9 @@ def push():
                                         compressed_file.seek(0)
 
                                         sys.stderr.write("compressed!\n")
-                                        backend.push(compressed_file, hexdigest, cb=upload_callback(filename))
+                                        backend.push(compressed_file, hexdigest, cb=ProgressPercentage(filename))
                                 else:
-                                    backend.push(file, hexdigest, cb=upload_callback(filename))
+                                    backend.push(file, hexdigest, cb=ProgressPercentage(filename))
 
                             sys.stderr.write("\n")
 
@@ -253,7 +257,7 @@ def pull():
                                 if backend.exists(hexdigest):
                                     if action == "upload-compressed":
                                         with tempfile.TemporaryFile() as compressed_file:
-                                            backend.pull(compressed_file, hexdigest, cb=upload_callback(filename))
+                                            backend.pull(compressed_file, hexdigest, cb=ProgressPercentage(filename))
                                             compressed_file.seek(0)
 
                                             decompressor = bz2.BZ2Decompressor()
@@ -262,7 +266,7 @@ def pull():
                                                     file.write(decompressor.decompress(line))
                                     else:
                                         with open(filename, 'wb') as file:
-                                            backend.pull(file, hexdigest, cb=upload_callback(filename))
+                                            backend.pull(file, hexdigest, cb=ProgressPercentage(filename))
 
                                     sys.stderr.write("\n")
                                     g().add(filename)
