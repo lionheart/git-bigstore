@@ -60,10 +60,24 @@ def default_backend():
 
 def backend_for_name(name):
     if name == "s3":
-        access_key_id = g().config("bigstore.s3.key", file=".bigstore")
-        secret_access_key = g().config("bigstore.s3.secret", file=".bigstore")
         bucket_name = g().config("bigstore.s3.bucket", file=".bigstore")
-        return S3Backend(access_key_id, secret_access_key, bucket_name)
+
+        try:
+            access_key_id = g().config("bigstore.s3.key", file=".bigstore")
+        except:
+            access_key_id = None
+
+        try:
+            secret_access_key = g().config("bigstore.s3.secret", file=".bigstore")
+        except:
+            secret_access_key = None
+
+        try:
+            profile_name = g().config("bigstore.s3.profile-name", file=".bigstore")
+        except:
+            profile_name = None
+
+        return S3Backend(bucket_name, access_key_id, secret_access_key, profile_name)
     elif name == "cloudfiles":
         username = g().config("bigstore.cloudfiles.username", file=".bigstore")
         api_key = g().config("bigstore.cloudfiles.key", file=".bigstore")
@@ -343,14 +357,19 @@ def request_s3_credentials():
     print
     print "Enter your Amazon S3 Credentials"
     print
+    s3_bucket = raw_input("Bucket Name: ")
     s3_key = raw_input("Access Key: ")
     s3_secret = raw_input("Secret Key: ")
-    s3_bucket = raw_input("Bucket Name: ")
+    s3_profile_name = raw_input("Profile Name: ")
 
     g().config("bigstore.backend", "s3", file=".bigstore")
-    g().config("bigstore.s3.key", s3_key, file=".bigstore")
-    g().config("bigstore.s3.secret", s3_secret, file=".bigstore")
     g().config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+    if s3_key != '':
+        g().config("bigstore.s3.key", s3_key, file=".bigstore")
+    if s3_secret != '':
+        g().config("bigstore.s3.secret", s3_secret, file=".bigstore")
+    if s3_profile_name != '':
+        g().config("bigstore.s3.profile-name", s3_profile_name, file=".bigstore")
 
 def request_google_cloud_storage_credentials():
     print
@@ -413,10 +432,25 @@ def init():
 
         if choice == "1":
             try:
-                g().config("bigstore.s3.key", file=".bigstore")
-                g().config("bigstore.s3.secret", file=".bigstore")
                 g().config("bigstore.s3.bucket", file=".bigstore")
             except git.exc.GitCommandError:
+                request_s3_credentials()
+
+            keys_set = True
+            try:
+                g().config("bigstore.s3.key", file=".bigstore")
+                g().config("bigstore.s3.secret", file=".bigstore")
+            except git.exc.GitCommandError:
+                keys_set = False
+
+            profile_name_set = True
+            try:
+                g().config("bigstore.s3.profile-name", file=".bigstore")
+            except git.exc.GitCommandError:
+                profile_name_set = False
+
+            if not keys_set and not profile_name_set:
+                print "Either the secret keys are not set or the profile name is not set"
                 request_s3_credentials()
         elif choice == "2":
             try:
