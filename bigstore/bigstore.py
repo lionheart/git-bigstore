@@ -20,7 +20,6 @@ from .backends import RackspaceBackend
 from .backends import GoogleBackend
 
 from dateutil import tz as dateutil_tz
-import boto
 import git
 import pytz
 
@@ -61,10 +60,24 @@ def default_backend():
 
 def backend_for_name(name):
     if name == "s3":
-        access_key_id = g().config("bigstore.s3.key", file=".bigstore")
-        secret_access_key = g().config("bigstore.s3.secret", file=".bigstore")
         bucket_name = g().config("bigstore.s3.bucket", file=".bigstore")
-        return S3Backend(access_key_id, secret_access_key, bucket_name)
+
+        try:
+            access_key_id = g().config("bigstore.s3.key", file=".bigstore")
+        except:
+            access_key_id = None
+
+        try:
+            secret_access_key = g().config("bigstore.s3.secret", file=".bigstore")
+        except:
+            secret_access_key = None
+
+        try:
+            profile_name = g().config("bigstore.s3.profile-name", file=".bigstore")
+        except:
+            profile_name = None
+
+        return S3Backend(bucket_name, access_key_id, secret_access_key, profile_name)
     elif name == "cloudfiles":
         username = g().config("bigstore.cloudfiles.username", file=".bigstore")
         api_key = g().config("bigstore.cloudfiles.key", file=".bigstore")
@@ -94,15 +107,20 @@ def mkdir_p(path):
         else:
             raise
 
-def upload_callback(filename):
-    def inner(size, total):
-        sys.stderr.write("\r")
-        if total > 0:
-            sys.stderr.write("{: <4.0%}\t{}\t\t({: {width}}/{: {width}})".format(size / float(total), filename, size, total, width=max(int(math.log(total, 10))-2, 2)))
-        else:
-            sys.stderr.write("?%\t{}".format(filename))
+class ProgressPercentage(object):
+    def __init__(self, filename):
+        self.filename = filename
+        self.size = float(os.path.getsize(filename))
+        self.seen_so_far = 0
 
-    return inner
+    def __call__(self, bytes_amount):
+        self.seen_so_far += bytes_amount
+        if self.size:
+            percentage = (self.seen_so_far / self.size) * 100
+            sys.stdout.write("\r{}  {} / {}  ({: <2.0%})".format(self.filename, self.seen_so_far, self.size, percentage))
+        else:
+            sys.stdout.write("\r{}  {}" % (self.filename, self.seen_so_far))
+        sys.stdout.flush()
 
 def pathnames():
     """ Generator that will yield pathnames for pathnames tracked under .gitattributes """
@@ -192,9 +210,9 @@ def push():
                                         compressed_file.seek(0)
 
                                         sys.stderr.write("compressed!\n")
-                                        backend.push(compressed_file, hexdigest, cb=upload_callback(filename))
+                                        backend.push(compressed_file, hexdigest, cb=ProgressPercentage(filename))
                                 else:
-                                    backend.push(file, hexdigest, cb=upload_callback(filename))
+                                    backend.push(file, hexdigest, cb=ProgressPercentage(filename))
 
                             sys.stderr.write("\n")
 
@@ -253,7 +271,7 @@ def pull():
                                 if backend.exists(hexdigest):
                                     if action == "upload-compressed":
                                         with tempfile.TemporaryFile() as compressed_file:
-                                            backend.pull(compressed_file, hexdigest, cb=upload_callback(filename))
+                                            backend.pull(compressed_file, hexdigest, cb=ProgressPercentage(filename))
                                             compressed_file.seek(0)
 
                                             decompressor = bz2.BZ2Decompressor()
@@ -262,7 +280,7 @@ def pull():
                                                     file.write(decompressor.decompress(line))
                                     else:
                                         with open(filename, 'wb') as file:
-                                            backend.pull(file, hexdigest, cb=upload_callback(filename))
+                                            backend.pull(file, hexdigest, cb=ProgressPercentage(filename))
 
                                     sys.stderr.write("\n")
                                     g().add(filename)
@@ -339,14 +357,19 @@ def request_s3_credentials():
     print
     print "Enter your Amazon S3 Credentials"
     print
+    s3_bucket = raw_input("Bucket Name: ")
     s3_key = raw_input("Access Key: ")
     s3_secret = raw_input("Secret Key: ")
-    s3_bucket = raw_input("Bucket Name: ")
+    s3_profile_name = raw_input("Profile Name: ")
 
     g().config("bigstore.backend", "s3", file=".bigstore")
-    g().config("bigstore.s3.key", s3_key, file=".bigstore")
-    g().config("bigstore.s3.secret", s3_secret, file=".bigstore")
     g().config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+    if s3_key != '':
+        g().config("bigstore.s3.key", s3_key, file=".bigstore")
+    if s3_secret != '':
+        g().config("bigstore.s3.secret", s3_secret, file=".bigstore")
+    if s3_profile_name != '':
+        g().config("bigstore.s3.profile-name", s3_profile_name, file=".bigstore")
 
 def request_google_cloud_storage_credentials():
     print
@@ -409,10 +432,25 @@ def init():
 
         if choice == "1":
             try:
-                g().config("bigstore.s3.key", file=".bigstore")
-                g().config("bigstore.s3.secret", file=".bigstore")
                 g().config("bigstore.s3.bucket", file=".bigstore")
             except git.exc.GitCommandError:
+                request_s3_credentials()
+
+            keys_set = True
+            try:
+                g().config("bigstore.s3.key", file=".bigstore")
+                g().config("bigstore.s3.secret", file=".bigstore")
+            except git.exc.GitCommandError:
+                keys_set = False
+
+            profile_name_set = True
+            try:
+                g().config("bigstore.s3.profile-name", file=".bigstore")
+            except git.exc.GitCommandError:
+                profile_name_set = False
+
+            if not keys_set and not profile_name_set:
+                print "Either the secret keys are not set or the profile name is not set"
                 request_s3_credentials()
         elif choice == "2":
             try:
