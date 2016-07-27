@@ -1,7 +1,7 @@
 git-bigstore
 ============
 
-git-bigstore is an extension to Git that helps you track big files. For technical details, check out the [Wiki](https://github.com/lionheartsw/git-bigstore/wiki).
+git-bigstore is an extension to Git that helps you track big files. For technical details, check out the [Wiki](https://github.com/lionheart/git-bigstore/wiki).
 
 Requirements
 ============
