@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ "$1" != "" ]; then
-  sed -i "" "s/\(__version__[ ]*=[ ]\).*/\1 \"$1\"/g" bigstore/metadata.py
+  sed -i "" "s/\(__version__[ ]*=\).*/\1 \"$1\"/g" bigstore/metadata.py
   git add .
   git commit -m "bump version to $1"
   git tag $1
