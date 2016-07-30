@@ -32,7 +32,7 @@ At this point, you will be prompted for which backend you would like to use (eit
 
 To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in your backend, run this command in your repository root:
 
-    $ echo "*.zip filter=bigstore" > .gitattributes
+    echo "*.zip filter=bigstore" > .gitattributes
 
 After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with relevant identifying information.
 
@@ -117,8 +117,6 @@ git-annex is another alternative, but it's solving a different problem and its i
 
 Copyright
 ---------
-
-Copyright 2015, Lionheart Software LLC.
 
 Licensed under Apache 2.0. See [LICENSE](LICENSE) for more details.
 

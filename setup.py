@@ -25,11 +25,27 @@ metadata = {}
 metadata_file = "bigstore/metadata.py"
 exec(compile(open(metadata_file).read(), metadata_file, 'exec'), metadata)
 
+# http://pypi.python.org/pypi?:action=list_classifiers
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Operating System :: Unix",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 2.7",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Version Control",
+    "Topic :: Utilities",
+]
+
 setup(
     name='git-bigstore',
+    description="Track big files with Git.",
     version=metadata['__version__'],
     license=metadata['__license__'],
-    description="Track big files with Git.",
+    classifiers=classifiers,
     author=metadata['__author__'],
     author_email=metadata['__email__'],
     url="https://github.com/lionheart/git-bigstore",
