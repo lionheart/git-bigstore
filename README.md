@@ -1,10 +1,14 @@
 git-bigstore
 ============
 
+![Version](https://img.shields.io/pypi/v/git-bigstore.svg?style=flat)
+![License](https://img.shields.io/pypi/l/git-bigstore.svg?style=flat)
+![Versions](https://img.shields.io/pypi/pyversions/git-bigstore.svg?style=flat)
+
 git-bigstore is an extension to Git that helps you track big files. For technical details, check out the [Wiki](https://github.com/lionheart/git-bigstore/wiki).
 
 Requirements
-============
+------------
 
 * Python 2.7+
 * An Amazon S3, Google Cloud Storage, or Rackspace Cloud account

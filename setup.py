@@ -22,7 +22,8 @@ except ImportError:
     from distutils.core import setup
 
 metadata = {}
-execfile("bigstore/metadata.py", metadata)
+metadata_file = "bigstore/metadata.py"
+exec(compile(open(metadata_file).read(), metadata_file, 'exec'), metadata)
 
 setup(
     name='git-bigstore',
