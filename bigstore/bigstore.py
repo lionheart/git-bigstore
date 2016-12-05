@@ -133,7 +133,7 @@ class ProgressPercentage(object):
             percentage = (self.seen_so_far / self.size) * 100
             sys.stdout.write("\r{}  {} / {}  ({: <2.0%})".format(self.filename, self.seen_so_far, self.size, percentage))
         else:
-            sys.stdout.write("\r{}  {}" % (self.filename, self.seen_so_far))
+            sys.stdout.write("\r{}  {}".format(self.filename, self.seen_so_far))
         sys.stdout.flush()
 
 def pathnames():
