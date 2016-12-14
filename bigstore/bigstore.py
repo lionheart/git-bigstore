@@ -136,11 +136,10 @@ class ProgressPercentage(object):
             sys.stdout.write("\r{}  {}".format(self.filename, self.seen_so_far))
         sys.stdout.flush()
 
-def pathnames():
-    """ Generator that will yield pathnames for pathnames tracked under .gitattributes """
+def pathnames_from_filename(filename):
     filters = []
     try:
-        with open(".gitattributes") as file:
+        with open(filename) as file:
             for line in file:
                 match = attribute_regex.match(line)
                 if match:
@@ -151,18 +150,29 @@ def pathnames():
         # The .gitattributes file might not exist. Should prompt the user to run
         # "git bigstore init"?
         pass
-    else:
-        results = g().ls_tree("HEAD", r=True).split('\n')
-        filenames = {}
-        for result in results:
-            metadata, filename = result.split('\t')
-            _, _, sha = metadata.split(' ')
-            filenames[filename] = sha
+    return filters
 
-        for wildcard, filter in filters:
-            for filename, sha in filenames.iteritems():
-                if fnmatch.fnmatch(filename, wildcard):
-                    yield sha, filename, filter == "bigstore-compress"
+def pathnames():
+    """ Generator that will yield pathnames for pathnames tracked under .gitattributes and private attributes """
+    filters = []
+    filters.extend(pathnames_from_filename(".gitattributes"))
+    filters.extend(pathnames_from_filename(".git/info/attributes"))
+    if not filters:
+        sys.stderr.write("No bigstore gitattributes filters found.  Is .gitattributes set up correctly?\n")
+        return
+
+    results = g().ls_tree("HEAD", r=True).split('\n')
+    filenames = {}
+    for result in results:
+        metadata, filename = result.split('\t')
+        _, _, sha = metadata.split(' ')
+        filenames[filename] = sha
+
+    for wildcard, filter in filters:
+        for filename, sha in filenames.iteritems():
+            if fnmatch.fnmatch(filename, wildcard):
+                yield sha, filename, filter == "bigstore-compress"
+
 
 def push():
     try:
