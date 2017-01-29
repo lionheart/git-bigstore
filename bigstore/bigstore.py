@@ -15,12 +15,10 @@
 # limitations under the License.
 
 from datetime import datetime
-from datetime import tzinfo
 import bz2
 import errno
 import fnmatch
 import hashlib
-import math
 import operator
 import os
 import re
@@ -47,6 +45,12 @@ try:
 except git.exc.GitCommandError:
     default_hash_function_name = 'sha1'
 
+try:
+    toplevel_dir = g().rev_parse(show_toplevel=True)
+except git.exc.GitCommandError:
+    toplevel_dir = '.'
+config_filename = os.path.join(toplevel_dir, '.bigstore')
+
 hash_functions = {
     'md5': hashlib.md5,
     'sha1': hashlib.sha1,
@@ -58,12 +62,22 @@ hash_functions = {
 
 default_hash_function = hash_functions[default_hash_function_name]
 
-def default_backend():
-    try:
-        backend_name = g().config("bigstore.backend", file=".bigstore")
-    except git.exc.GitCommandError:
-        backend_name = None
 
+def config(name):
+    """
+    Read a setting from the .bigstore config file
+
+    :param name: name of config setting to read
+    :return: str or None
+    """
+    try:
+        return g().config(name, file=os.path.join(toplevel_dir, config_filename))
+    except git.exc.GitCommandError:
+        return None
+
+
+def default_backend():
+    backend_name = config('bigstore.backend')
     backend = backend_for_name(backend_name)
 
     if backend:
@@ -72,44 +86,35 @@ def default_backend():
         sys.stderr.write("error: s3, gs, and cloudfiles are currently the only supported backends")
         sys.exit(0)
 
+
 def backend_for_name(name):
-    if name == "s3":
-        bucket_name = g().config("bigstore.s3.bucket", file=".bigstore")
-
-        try:
-            access_key_id = g().config("bigstore.s3.key", file=".bigstore")
-        except:
-            access_key_id = None
-
-        try:
-            secret_access_key = g().config("bigstore.s3.secret", file=".bigstore")
-        except:
-            secret_access_key = None
-
-        try:
-            profile_name = g().config("bigstore.s3.profile-name", file=".bigstore")
-        except:
-            profile_name = None
-
+    if name == 's3':
+        bucket_name = config('bigstore.s3.bucket')
+        access_key_id = config('bigstore.s3.key')
+        secret_access_key = config('bigstore.s3.secret')
+        profile_name = config('bigstore.s3.profile-name')
         return S3Backend(bucket_name, access_key_id, secret_access_key, profile_name)
-    elif name == "cloudfiles":
-        username = g().config("bigstore.cloudfiles.username", file=".bigstore")
-        api_key = g().config("bigstore.cloudfiles.key", file=".bigstore")
-        container_name = g().config("bigstore.cloudfiles.container", file=".bigstore")
+    elif name == 'cloudfiles':
+        username = config('bigstore.cloudfiles.username')
+        api_key = config('bigstore.cloudfiles.key')
+        container_name = config('bigstore.cloudfiles.container')
         return RackspaceBackend(username, api_key, container_name)
-    elif name == "gs":
-        access_key_id = g().config("bigstore.gs.key", file=".bigstore")
-        secret_access_key = g().config("bigstore.gs.secret", file=".bigstore")
-        bucket_name = g().config("bigstore.gs.bucket", file=".bigstore")
+    elif name == 'gs':
+        access_key_id = config('bigstore.gs.key')
+        secret_access_key = config('bigstore.gs.secret')
+        bucket_name = config('bigstore.gs.bucket')
         return GoogleBackend(access_key_id, secret_access_key, bucket_name)
     else:
         return None
 
+
 def object_directory(hash_function_name):
     return os.path.join(git_directory(g()), "bigstore", "objects", hash_function_name)
 
+
 def object_filename(hash_function_name, hexdigest):
     return os.path.join(object_directory(hash_function_name), hexdigest[:2], hexdigest[2:])
+
 
 def mkdir_p(path):
     try:
@@ -121,6 +126,7 @@ def mkdir_p(path):
         else:
             raise
 
+
 class ProgressPercentage(object):
     def __init__(self, filename):
         self.filename = filename
@@ -130,11 +136,13 @@ class ProgressPercentage(object):
     def __call__(self, bytes_amount):
         self.seen_so_far += bytes_amount
         if self.size:
-            percentage = (self.seen_so_far / self.size) * 100
-            sys.stdout.write("\r{}  {} / {}  ({: <2.0%})".format(self.filename, self.seen_so_far, self.size, percentage))
+            percentage = self.seen_so_far / self.size
+            sys.stdout.write("\r{}  {} / {}  ({: <2.0%})".format(
+                self.filename, self.seen_so_far, self.size, percentage))
         else:
             sys.stdout.write("\r{}  {}".format(self.filename, self.seen_so_far))
         sys.stdout.flush()
+
 
 def pathnames_from_filename(filename):
     filters = []
@@ -152,11 +160,12 @@ def pathnames_from_filename(filename):
         pass
     return filters
 
+
 def pathnames():
     """ Generator that will yield pathnames for pathnames tracked under .gitattributes and private attributes """
     filters = []
-    filters.extend(pathnames_from_filename(".gitattributes"))
-    filters.extend(pathnames_from_filename(".git/info/attributes"))
+    filters.extend(pathnames_from_filename(os.path.join(toplevel_dir, '.gitattributes')))
+    filters.extend(pathnames_from_filename(os.path.join(toplevel_dir, '.git/info/attributes')))
     if not filters:
         sys.stderr.write("No bigstore gitattributes filters found.  Is .gitattributes set up correctly?\n")
         return
@@ -252,11 +261,13 @@ def push():
 
                         # We use the timestamp as the first entry as it will help us
                         # sort the entries easily with the cat_sort_uniq merge.
-                        g().notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(time.time(), action, backend.name, user_name, user_email))
+                        g().notes("--ref=bigstore", "append", sha, "-m", "{}	{}	{}	{} <{}>".format(
+                            time.time(), action, backend.name, user_name, user_email))
 
     sys.stderr.write("pushing bigstore metadata...")
     g().push("origin", "refs/notes/bigstore")
     sys.stderr.write("done\n")
+
 
 def pull():
     try:
@@ -315,6 +326,7 @@ def pull():
     g().push("origin", "refs/notes/bigstore")
     sys.stderr.write("done\n")
 
+
 def filter_clean():
     firstline = sys.stdin.next()
     if firstline == "bigstore\n":
@@ -341,6 +353,7 @@ def filter_clean():
         sys.stdout.write("{}\n".format(default_hash_function_name))
         sys.stdout.write("{}\n".format(hexdigest))
 
+
 def filter_smudge():
     firstline = sys.stdin.next()
     if firstline == "bigstore\n":
@@ -364,6 +377,7 @@ def filter_smudge():
         for line in sys.stdin:
             sys.stdout.write(line)
 
+
 def request_rackspace_credentials():
     print
     print "Enter your Rackspace Cloud Files Credentials"
@@ -372,10 +386,11 @@ def request_rackspace_credentials():
     api_key = raw_input("API Key: ")
     container = raw_input("Container: ")
 
-    g().config("bigstore.backend", "cloudfiles", file=".bigstore")
-    g().config("bigstore.cloudfiles.username", username, file=".bigstore")
-    g().config("bigstore.cloudfiles.key", api_key, file=".bigstore")
-    g().config("bigstore.cloudfiles.container", container, file=".bigstore")
+    g().config("bigstore.backend", "cloudfiles", file=config_filename)
+    g().config("bigstore.cloudfiles.username", username, file=config_filename)
+    g().config("bigstore.cloudfiles.key", api_key, file=config_filename)
+    g().config("bigstore.cloudfiles.container", container, file=config_filename)
+
 
 def request_s3_credentials():
     print
@@ -386,14 +401,15 @@ def request_s3_credentials():
     s3_secret = raw_input("Secret Key: ")
     s3_profile_name = raw_input("Profile Name: ")
 
-    g().config("bigstore.backend", "s3", file=".bigstore")
-    g().config("bigstore.s3.bucket", s3_bucket, file=".bigstore")
+    g().config("bigstore.backend", "s3", file=config_filename)
+    g().config("bigstore.s3.bucket", s3_bucket, file=config_filename)
     if s3_key != '':
-        g().config("bigstore.s3.key", s3_key, file=".bigstore")
+        g().config("bigstore.s3.key", s3_key, file=config_filename)
     if s3_secret != '':
-        g().config("bigstore.s3.secret", s3_secret, file=".bigstore")
+        g().config("bigstore.s3.secret", s3_secret, file=config_filename)
     if s3_profile_name != '':
-        g().config("bigstore.s3.profile-name", s3_profile_name, file=".bigstore")
+        g().config("bigstore.s3.profile-name", s3_profile_name, file=config_filename)
+
 
 def request_google_cloud_storage_credentials():
     print
@@ -403,10 +419,11 @@ def request_google_cloud_storage_credentials():
     google_secret = raw_input("Secret Key: ")
     google_bucket = raw_input("Bucket Name: ")
 
-    g().config("bigstore.backend", "gs", file=".bigstore")
-    g().config("bigstore.gs.key", google_key, file=".bigstore")
-    g().config("bigstore.gs.secret", google_secret, file=".bigstore")
-    g().config("bigstore.gs.bucket", google_bucket, file=".bigstore")
+    g().config("bigstore.backend", "gs", file=config_filename)
+    g().config("bigstore.gs.key", google_key, file=config_filename)
+    g().config("bigstore.gs.secret", google_secret, file=config_filename)
+    g().config("bigstore.gs.bucket", google_bucket, file=config_filename)
+
 
 def log():
     filename = sys.argv[2]
@@ -430,7 +447,8 @@ def log():
                 timestamp, action, backend, user = note.split('\t')
                 utc_dt = datetime.fromtimestamp(float(timestamp), tz=pytz.timezone("UTC"))
                 dt = utc_dt.astimezone(dateutil_tz.tzlocal())
-                formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''), dt.strftime("%T %Y %Z"))
+                formatted_date = "{} {} {}".format(dt.strftime("%a %b"), dt.strftime("%e").replace(' ', ''),
+                                                   dt.strftime("%T %Y %Z"))
                 entries.append((dt, sha, formatted_date, action, backend, user))
 
     sorted_entries = sorted(entries, key=operator.itemgetter(0), reverse=True)
@@ -442,9 +460,10 @@ def log():
 
         print line
 
+
 def init():
     try:
-        g().config("bigstore.backend", file=".bigstore")
+        g().config("bigstore.backend", file=config_filename)
     except git.exc.GitCommandError:
         print "What backend would you like to store your files with?"
         print "(1) Amazon S3"
@@ -456,20 +475,20 @@ def init():
 
         if choice == "1":
             try:
-                g().config("bigstore.s3.bucket", file=".bigstore")
+                g().config("bigstore.s3.bucket", file=config_filename)
             except git.exc.GitCommandError:
                 request_s3_credentials()
 
             keys_set = True
             try:
-                g().config("bigstore.s3.key", file=".bigstore")
-                g().config("bigstore.s3.secret", file=".bigstore")
+                g().config("bigstore.s3.key", file=config_filename)
+                g().config("bigstore.s3.secret", file=config_filename)
             except git.exc.GitCommandError:
                 keys_set = False
 
             profile_name_set = True
             try:
-                g().config("bigstore.s3.profile-name", file=".bigstore")
+                g().config("bigstore.s3.profile-name", file=config_filename)
             except git.exc.GitCommandError:
                 profile_name_set = False
 
@@ -478,16 +497,16 @@ def init():
                 request_s3_credentials()
         elif choice == "2":
             try:
-                g().config("bigstore.gs.key", file=".bigstore")
-                g().config("bigstore.gs.secret", file=".bigstore")
-                g().config("bigstore.gs.bucket", file=".bigstore")
+                g().config("bigstore.gs.key", file=config_filename)
+                g().config("bigstore.gs.secret", file=config_filename)
+                g().config("bigstore.gs.bucket", file=config_filename)
             except git.exc.GitCommandError:
                 request_google_cloud_storage_credentials()
         elif choice == "3":
             try:
-                g().config("bigstore.cloudfiles.username", file=".bigstore")
-                g().config("bigstore.cloudfiles.key", file=".bigstore")
-                g().config("bigstore.cloudfiles.container", file=".bigstore")
+                g().config("bigstore.cloudfiles.username", file=config_filename)
+                g().config("bigstore.cloudfiles.key", file=config_filename)
+                g().config("bigstore.cloudfiles.container", file=config_filename)
             except git.exc.GitCommandError:
                 request_rackspace_credentials()
 
@@ -509,4 +528,3 @@ def init():
     g().config("filter.bigstore-compress.smudge", "git-bigstore filter-smudge")
 
     mkdir_p(object_directory(default_hash_function_name))
-
