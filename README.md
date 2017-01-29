@@ -16,11 +16,7 @@ Requirements
 Configuration
 -------------
 
-First, install the requirements via pip.
-
-    pip install gitpython==0.3.2.RC1 boto==2.8.0 python-dateutil==1.5 pytz==2012h python-cloudfiles==1.7.10
-
-Then, install bigstore.
+First, install bigstore.
 
     pip install git-bigstore
 
