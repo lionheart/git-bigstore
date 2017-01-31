@@ -324,9 +324,18 @@ def pull():
 
                         break
 
-    sys.stderr.write("pushing bigstore metadata...")
-    g().push("origin", "refs/notes/bigstore")
-    sys.stderr.write("done\n")
+    if g().diff('refs/notes/bigstore', 'refs/notes/bigstore-remote'):
+        # Only push if something changed
+        sys.stderr.write('pushing bigstore metadata...')
+        try:
+            g().push('origin', 'refs/notes/bigstore')
+            sys.stderr.write('done\n')
+        except git.exc.GitCommandError as e:
+            if e.stderr and 'read only' in e.stderr:
+                sys.stderr.write('read only\n')
+            else:
+                # An error pushing during a pull is not fatal
+                sys.stderr.write('ERROR\n')
 
 
 def filter_clean():
