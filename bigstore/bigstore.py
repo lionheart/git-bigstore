@@ -184,6 +184,7 @@ def pathnames():
 
 
 def push():
+    assert_initialized()
     try:
         sys.stderr.write("pulling bigstore metadata...")
         g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
@@ -270,6 +271,7 @@ def push():
 
 
 def pull():
+    assert_initialized()
     try:
         sys.stderr.write("pulling bigstore metadata...")
         g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
@@ -528,3 +530,17 @@ def init():
     g().config("filter.bigstore-compress.smudge", "git-bigstore filter-smudge")
 
     mkdir_p(object_directory(default_hash_function_name))
+
+
+def assert_initialized():
+    """
+    Check the make sure `git bigstore init` has been called.
+    If not then print an error and exit(1)
+    """
+    try:
+        if g().config('filter.bigstore.clean') == 'git-bigstore filter-clean':
+            return  # repo config looks good
+    except git.exc.GitCommandError:
+        pass
+    sys.stderr.write('fatal: You must run `git bigstore init` first.\n')
+    sys.exit(1)
