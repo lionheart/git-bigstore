@@ -71,7 +71,7 @@ def config(name):
     :return: str or None
     """
     try:
-        return g().config(name, file=os.path.join(toplevel_dir, config_filename))
+        return g().config(name, file=config_filename)
     except git.exc.GitCommandError:
         return None
 
