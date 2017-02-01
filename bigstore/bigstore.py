@@ -71,7 +71,7 @@ def config(name):
     :return: str or None
     """
     try:
-        return g().config(name, file=os.path.join(toplevel_dir, config_filename))
+        return g().config(name, file=config_filename)
     except git.exc.GitCommandError:
         return None
 
@@ -184,6 +184,7 @@ def pathnames():
 
 
 def push():
+    assert_initialized()
     try:
         sys.stderr.write("pulling bigstore metadata...")
         g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
@@ -270,6 +271,7 @@ def push():
 
 
 def pull():
+    assert_initialized()
     try:
         sys.stderr.write("pulling bigstore metadata...")
         g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
@@ -322,9 +324,16 @@ def pull():
 
                         break
 
-    sys.stderr.write("pushing bigstore metadata...")
-    g().push("origin", "refs/notes/bigstore")
-    sys.stderr.write("done\n")
+    sys.stderr.write('pushing bigstore metadata...')
+    try:
+        g().push('origin', 'refs/notes/bigstore')
+        sys.stderr.write('done\n')
+    except git.exc.GitCommandError as e:
+        if e.stderr and 'read only' in e.stderr:
+            sys.stderr.write('read only\n')
+        else:
+            # An error pushing during a pull is not fatal
+            sys.stderr.write('ERROR\n')
 
 
 def filter_clean():
@@ -431,6 +440,9 @@ def log():
     entries = []
     for tree in trees:
         entry = g().ls_tree('-r', tree, filename)
+        if entry.strip() == '':
+            # skip empty lines as they will cause exceptions later
+            continue
         metadata, filename = entry.split('\t')
         _, _, sha = metadata.split(' ')
         try:
@@ -528,3 +540,21 @@ def init():
     g().config("filter.bigstore-compress.smudge", "git-bigstore filter-smudge")
 
     mkdir_p(object_directory(default_hash_function_name))
+
+
+def assert_initialized():
+    """
+    Check to make sure `git bigstore init` has been called.
+    If not, then print an error and exit(1)
+    """
+    try:
+        if g().config('filter.bigstore.clean') == 'git-bigstore filter-clean':
+            return  # repo config looks good
+    except git.exc.GitCommandError:
+        # `git config` can throw errors if the key is missing
+        pass
+    if os.path.exists(os.path.join(toplevel_dir, '.git')):
+        sys.stderr.write('fatal: You must run `git bigstore init` first.\n')
+    else:
+        sys.stderr.write('fatal: Not a git repository.\n')
+    sys.exit(1)
