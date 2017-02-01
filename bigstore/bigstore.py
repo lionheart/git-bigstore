@@ -324,18 +324,16 @@ def pull():
 
                         break
 
-    if g().diff('refs/notes/bigstore', 'refs/notes/bigstore-remote'):
-        # Only push if something changed
-        sys.stderr.write('pushing bigstore metadata...')
-        try:
-            g().push('origin', 'refs/notes/bigstore')
-            sys.stderr.write('done\n')
-        except git.exc.GitCommandError as e:
-            if e.stderr and 'read only' in e.stderr:
-                sys.stderr.write('read only\n')
-            else:
-                # An error pushing during a pull is not fatal
-                sys.stderr.write('ERROR\n')
+    sys.stderr.write('pushing bigstore metadata...')
+    try:
+        g().push('origin', 'refs/notes/bigstore')
+        sys.stderr.write('done\n')
+    except git.exc.GitCommandError as e:
+        if e.stderr and 'read only' in e.stderr:
+            sys.stderr.write('read only\n')
+        else:
+            # An error pushing during a pull is not fatal
+            sys.stderr.write('ERROR\n')
 
 
 def filter_clean():
@@ -443,6 +441,7 @@ def log():
     for tree in trees:
         entry = g().ls_tree('-r', tree, filename)
         if entry.strip() == '':
+            # skip empty lines as they will cause exceptions later
             continue
         metadata, filename = entry.split('\t')
         _, _, sha = metadata.split(' ')
@@ -545,13 +544,17 @@ def init():
 
 def assert_initialized():
     """
-    Check the make sure `git bigstore init` has been called.
-    If not then print an error and exit(1)
+    Check to make sure `git bigstore init` has been called.
+    If not, then print an error and exit(1)
     """
     try:
         if g().config('filter.bigstore.clean') == 'git-bigstore filter-clean':
             return  # repo config looks good
     except git.exc.GitCommandError:
+        # `git config` can throw errors if the key is missing
         pass
-    sys.stderr.write('fatal: You must run `git bigstore init` first.\n')
+    if os.path.exists(os.path.join(toplevel_dir, '.git')):
+        sys.stderr.write('fatal: You must run `git bigstore init` first.\n')
+    else:
+        sys.stderr.write('fatal: Not a git repository.\n')
     sys.exit(1)
