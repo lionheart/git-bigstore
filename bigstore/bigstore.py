@@ -127,6 +127,21 @@ def mkdir_p(path):
             raise
 
 
+def is_bigstore_file(filename):
+    """
+    Sniff a file to see if it looks like one of ours.
+
+    :param filename: filename to inspect
+    :return: True if the file starts with `bigstore`
+    """
+    prefix = 'bigstore\n'
+    try:
+        with open(filename) as fd:
+            return fd.read(len(prefix)) == prefix
+    except IOError:
+        return False
+
+
 class ProgressPercentage(object):
     def __init__(self, filename):
         self.filename = filename
@@ -293,36 +308,44 @@ def pull():
             try:
                 entries = g().notes("--ref=bigstore", "show", sha).split('\n')
             except git.exc.GitCommandError:
-                pass
-            else:
-                for entry in entries:
-                    timestamp, action, backend_name, _ = entry.split('\t')
-                    if action in ("upload", "upload-compressed"):
-                        firstline, hash_function_name, hexdigest = g().show(sha).split('\n')
-                        if firstline == 'bigstore':
-                            try:
-                                with open(object_filename(hash_function_name, hexdigest)):
-                                    pass
-                            except IOError:
-                                backend = backend_for_name(backend_name)
-                                if backend.exists(hexdigest):
-                                    if action == "upload-compressed":
-                                        with tempfile.TemporaryFile() as compressed_file:
-                                            backend.pull(compressed_file, hexdigest, cb=ProgressPercentage(filename))
-                                            compressed_file.seek(0)
+                if is_bigstore_file(filename):
+                    # Possibly this file was added on another fork so we don't have metadata.
+                    # Lets try assuming a default entry and see if it downloads anything.
+                    entries = ['\t'.join([
+                        '',
+                        'upload-compressed' if compress else 'upload',
+                        config('bigstore.backend'),  # default backend
+                        ''])]
+                else:
+                    entries = []
+            for entry in entries:
+                _, action, backend_name, _ = entry.split('\t')
+                if action in ('upload', 'upload-compressed'):
+                    firstline, hash_function_name, hexdigest = g().show(sha).split('\n')
+                    if firstline == 'bigstore':
+                        try:
+                            with open(object_filename(hash_function_name, hexdigest)):
+                                pass
+                        except IOError:
+                            backend = backend_for_name(backend_name)
+                            if backend.exists(hexdigest):
+                                if action == 'upload-compressed':
+                                    with tempfile.TemporaryFile() as compressed_file:
+                                        backend.pull(compressed_file, hexdigest, cb=ProgressPercentage(filename))
+                                        compressed_file.seek(0)
 
-                                            decompressor = bz2.BZ2Decompressor()
-                                            with open(filename, 'wb') as file:
-                                                for line in compressed_file:
-                                                    file.write(decompressor.decompress(line))
-                                    else:
+                                        decompressor = bz2.BZ2Decompressor()
                                         with open(filename, 'wb') as file:
-                                            backend.pull(file, hexdigest, cb=ProgressPercentage(filename))
+                                            for line in compressed_file:
+                                                file.write(decompressor.decompress(line))
+                                else:
+                                    with open(filename, 'wb') as file:
+                                        backend.pull(file, hexdigest, cb=ProgressPercentage(filename))
 
-                                    sys.stderr.write("\n")
-                                    g().add(filename)
+                                sys.stderr.write('\n')
+                                g().add(filename)
 
-                        break
+                    break
 
     sys.stderr.write('pushing bigstore metadata...')
     try:
