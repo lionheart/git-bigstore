@@ -183,22 +183,35 @@ def pathnames():
                 yield sha, filename, filter == "bigstore-compress"
 
 
-def push():
-    assert_initialized()
+def pull_metadata(repository='origin'):
+    """
+    Pull metadata from repository and automatically merge it with local metadata
+
+    :param repository: git url or remote
+    """
     try:
-        sys.stderr.write("pulling bigstore metadata...")
-        g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
+        if repository == 'origin':
+            sys.stderr.write('pulling bigstore metadata...')
+        else:
+            sys.stderr.write('pulling bigstore metadata from {}...'.format(repository))
+
+        g().fetch(repository, 'refs/notes/bigstore:refs/notes/bigstore-remote', '--force')
     except git.exc.GitCommandError:
         try:
             # Create a ref so that we can push up to the repo.
-            g().notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
-            sys.stderr.write("done\n")
+            g().notes('--ref=bigstore', 'add', 'HEAD', '-m', 'bigstore')
+            sys.stderr.write('done\n')
         except git.exc.GitCommandError:
             # If it fails silently, an existing notes object already exists.
-            sys.stderr.write("\n")
+            sys.stderr.write('\n')
     else:
-        g().notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
-        sys.stderr.write("done\n")
+        g().notes('--ref=bigstore', 'merge', '-s', 'cat_sort_uniq', 'refs/notes/bigstore-remote')
+        sys.stderr.write('done\n')
+
+
+def push():
+    assert_initialized()
+    pull_metadata()
 
     if len(sys.argv) > 2:
         filters = sys.argv[2:]
@@ -272,15 +285,7 @@ def push():
 
 def pull():
     assert_initialized()
-    try:
-        sys.stderr.write("pulling bigstore metadata...")
-        g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
-    except git.exc.GitCommandError:
-        g().notes("--ref=bigstore", "add", "-m", "bigstore")
-        sys.stderr.write("done\n")
-    else:
-        g().notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
-        sys.stderr.write("done\n")
+    pull_metadata()
 
     if len(sys.argv) > 2:
         filters = sys.argv[2:]
@@ -334,6 +339,21 @@ def pull():
         else:
             # An error pushing during a pull is not fatal
             sys.stderr.write('ERROR\n')
+
+
+def fetch(repository):
+    """
+    Pull metadata from a remote repository and merge it with our own.
+
+    :param repository: either a git url or name of a remote
+    """
+    assert repository
+    pull_metadata()
+    pull_metadata(repository)
+
+    sys.stderr.write("pushing bigstore metadata...")
+    g().push("origin", "refs/notes/bigstore")
+    sys.stderr.write("done\n")
 
 
 def filter_clean():

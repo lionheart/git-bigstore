@@ -31,6 +31,7 @@ from .bigstore import (
     push,
     pull,
     log,
+    fetch
 )
 
 import backends
@@ -38,6 +39,6 @@ import backends
 __all__ = [
     '__author__', '__copyright__', '__email__', '__license__',
     '__maintainer__', '__version__', 'filter_smudge', 'filter_clean',
-    'init', 'push', 'pull', 'backends', 'log'
+    'init', 'push', 'pull', 'backends', 'log', 'fetch'
 ]
 

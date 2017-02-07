@@ -15,38 +15,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
 import tempfile
 from subprocess import call
 import argparse
 
-import git
-from bigstore import push, pull, filter_clean, filter_smudge, init, log
+from bigstore import push, pull, filter_clean, filter_smudge, init, log, fetch
+
 
 class BigstoreInitAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         init()
 
+
 class BigstorePushAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         push()
+
 
 class BigstorePullAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         pull()
 
+
+class BigstoreFetchAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        fetch(values)
+
+
 class BigstoreLogAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         log()
+
 
 class BigstoreFilterCleanAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         filter_clean()
 
+
 class BigstoreFilterSmudgeAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         filter_smudge()
+
 
 class BigstoreShowImageAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
@@ -57,6 +67,7 @@ class BigstoreShowImageAction(argparse.Action):
             for line in file:
                 sys.stdout.write(line)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='git-bigstore')
     subparsers = parser.add_subparsers()
@@ -66,23 +77,29 @@ if __name__ == "__main__":
 
     parser_push = subparsers.add_parser("push", help="upload bigstore files to your storage backend")
     parser_push.add_argument("pattern", nargs="*",
-            help="only push filenames matching specified patterns", action=BigstorePushAction)
+                             help="only push filenames matching specified patterns", action=BigstorePushAction)
 
     parser_pull = subparsers.add_parser("pull", help="download bigstore files from the storage backend")
     parser_pull.add_argument("pattern", nargs="*", help="only pull filenames matching specified patterns",
-            action=BigstorePullAction)
+                             action=BigstorePullAction)
+
+    parser_init = subparsers.add_parser('fetch', help='fetch and merge metadata from a remote repository')
+    parser_init.add_argument('repository', action=BigstoreFetchAction,
+                             help='git url or remote to fetch bigsotre metadata from')
 
     parser_log = subparsers.add_parser("log", help="display a history of the specified file")
     parser_log.add_argument("filename", nargs=1, action=BigstoreLogAction)
 
     parser_filter_clean = subparsers.add_parser("filter-clean", help="clean the specified file from stdin")
-    parser_filter_clean.add_argument("input", nargs='?', type=argparse.FileType('r'), action=BigstoreFilterCleanAction, default=sys.stdin)
+    parser_filter_clean.add_argument("input", nargs='?', type=argparse.FileType('r'), action=BigstoreFilterCleanAction,
+                                     default=sys.stdin)
 
     parser_filter_smudge = subparsers.add_parser("filter-smudge", help="smudge the specified file from stdin")
-    parser_filter_smudge.add_argument("input", nargs='?', type=argparse.FileType('r'), action=BigstoreFilterSmudgeAction, default=sys.stdin)
+    parser_filter_smudge.add_argument("input", nargs='?', type=argparse.FileType('r'),
+                                      action=BigstoreFilterSmudgeAction, default=sys.stdin)
 
-    parser_show_image = subparsers.add_parser("show-image", help="display the specified file from stdin in ascii format")
+    parser_show_image = subparsers.add_parser("show-image",
+                                              help="display the specified file from stdin in ascii format")
     parser_show_image.add_argument("input", type=argparse.FileType('r'), action=BigstoreShowImageAction)
 
     args = parser.parse_args()
-
