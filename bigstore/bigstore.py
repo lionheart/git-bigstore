@@ -190,23 +190,23 @@ def pull_metadata(repository='origin'):
     :param repository: git url or remote
     """
     try:
-        if repository == 'origin':
-            sys.stderr.write('pulling bigstore metadata...')
+        if repository == "origin":
+            sys.stderr.write("pulling bigstore metadata...")
         else:
-            sys.stderr.write('pulling bigstore metadata from {}...'.format(repository))
+            sys.stderr.write("pulling bigstore metadata from {}...".format(repository))
 
-        g().fetch(repository, 'refs/notes/bigstore:refs/notes/bigstore-remote', '--force')
+        g().fetch(repository, "refs/notes/bigstore:refs/notes/bigstore-remote", "--force")
     except git.exc.GitCommandError:
         try:
             # Create a ref so that we can push up to the repo.
-            g().notes('--ref=bigstore', 'add', 'HEAD', '-m', 'bigstore')
-            sys.stderr.write('done\n')
+            g().notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
+            sys.stderr.write("done\n")
         except git.exc.GitCommandError:
             # If it fails silently, an existing notes object already exists.
-            sys.stderr.write('\n')
+            sys.stderr.write("\n")
     else:
-        g().notes('--ref=bigstore', 'merge', '-s', 'cat_sort_uniq', 'refs/notes/bigstore-remote')
-        sys.stderr.write('done\n')
+        g().notes("--ref=bigstore", "merge", "-s", "cat_sort_uniq", "refs/notes/bigstore-remote")
+        sys.stderr.write("done\n")
 
 
 def push():
@@ -347,7 +347,6 @@ def fetch(repository):
 
     :param repository: either a git url or name of a remote
     """
-    assert repository
     pull_metadata()
     pull_metadata(repository)
 
