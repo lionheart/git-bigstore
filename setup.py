@@ -16,15 +16,15 @@
 # limitations under the License.
 
 import os
+import runpy
 
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
-metadata = {}
-metadata_file = "bigstore/metadata.py"
-exec(compile(open(metadata_file).read(), metadata_file, 'exec'), metadata)
+metadata_filename = "bigstore/metadata.py"
+metadata = runpy.run_path(metadata_filename)
 
 # http://pypi.python.org/pypi?:action=list_classifiers
 classifiers = [
