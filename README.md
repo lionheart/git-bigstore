@@ -1,5 +1,5 @@
-git-bigstore
-============
+![](meta/repo-banner.png)
+[![](meta/repo-banner-bottom.png)][lionheart-url]
 
 ![Version](https://img.shields.io/pypi/v/git-bigstore.svg?style=flat)
 ![License](https://img.shields.io/pypi/l/git-bigstore.svg?style=flat)
@@ -115,4 +115,6 @@ Copyright
 ---------
 
 Licensed under Apache 2.0. See [LICENSE](LICENSE) for more details.
+
+[lionheart-url]: https://lionheartsw.com/
 
