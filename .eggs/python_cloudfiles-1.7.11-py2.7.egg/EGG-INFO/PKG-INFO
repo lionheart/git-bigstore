@@ -1,0 +1,20 @@
+Metadata-Version: 1.1
+Name: python-cloudfiles
+Version: 1.7.11
+Summary: CloudFiles client library for Python
+Home-page: https://github.com/rackspace/python-cloudfiles
+Author: Rackspace
+Author-email: please_report_on_github@rackspace.com
+License: MIT
+Description-Content-Type: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Development Status :: 7 - Inactive
+Classifier: Environment :: Console
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Topic :: Internet :: WWW/HTTP
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: System :: Distributed Computing
+Classifier: Topic :: Utilities
