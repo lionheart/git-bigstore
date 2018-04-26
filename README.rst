@@ -167,3 +167,4 @@ Licensed under Apache 2.0. See `LICENSE <LICENSE>`__ for more details.
 .. |Version| image:: https://img.shields.io/pypi/v/git-bigstore.svg?style=flat
 .. |License| image:: https://img.shields.io/pypi/l/git-bigstore.svg?style=flat
 .. |Versions| image:: https://img.shields.io/pypi/pyversions/git-bigstore.svg?style=flat
+
