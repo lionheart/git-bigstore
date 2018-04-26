@@ -44,3 +44,4 @@ publish: clean update_readme update_version
 	python3 setup.py bdist_wheel --universal
 	gpg --detach-sign -a dist/*.whl
 	twine upload dist/*
+
