@@ -15,6 +15,7 @@
 #   limitations under the License.
 
 
+from __future__ import absolute_import
 from .metadata import (
     __author__,
     __copyright__,
@@ -34,7 +35,7 @@ from .bigstore import (
     fetch
 )
 
-import backends
+from . import backends
 
 __all__ = [
     '__author__', '__copyright__', '__email__', '__license__',
