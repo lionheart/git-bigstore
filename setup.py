@@ -59,12 +59,12 @@ setup(
         'bin/git-bigstore',
     ],
     install_requires=[
-        'gitpython<2',
+        'gitpython<3',
         'boto',
         'boto3',
         'python-dateutil',
         'pytz',
-        'python-cloudfiles',
+        'python-cloudfiles;python_version<="2.7"',
     ],
 )
 
