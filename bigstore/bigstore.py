@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import division
+from __future__ import print_function
+from builtins import input
+from builtins import object
 from datetime import datetime
 import bz2
 import errno
@@ -193,7 +197,7 @@ def pathnames():
         filenames[filename] = sha
 
     for wildcard, filter in filters:
-        for filename, sha in filenames.iteritems():
+        for filename, sha in filenames.items():
             if fnmatch.fnmatch(filename, wildcard):
                 yield sha, filename, filter == "bigstore-compress"
 
@@ -379,7 +383,7 @@ def fetch(repository):
 
 
 def filter_clean():
-    firstline = sys.stdin.next()
+    firstline = next(sys.stdin)
     if firstline == "bigstore\n":
         sys.stdout.write(firstline)
         for line in sys.stdin:
@@ -406,10 +410,10 @@ def filter_clean():
 
 
 def filter_smudge():
-    firstline = sys.stdin.next()
+    firstline = next(sys.stdin)
     if firstline == "bigstore\n":
-        hash_function_name = sys.stdin.next()
-        hexdigest = sys.stdin.next()
+        hash_function_name = next(sys.stdin)
+        hexdigest = next(sys.stdin)
         source_filename = object_filename(hash_function_name[:-1], hexdigest[:-1])
 
         try:
@@ -430,12 +434,12 @@ def filter_smudge():
 
 
 def request_rackspace_credentials():
-    print
-    print "Enter your Rackspace Cloud Files Credentials"
-    print
-    username = raw_input("Username: ")
-    api_key = raw_input("API Key: ")
-    container = raw_input("Container: ")
+    print()
+    print("Enter your Rackspace Cloud Files Credentials")
+    print()
+    username = input("Username: ")
+    api_key = input("API Key: ")
+    container = input("Container: ")
 
     g().config("bigstore.backend", "cloudfiles", file=config_filename)
     g().config("bigstore.cloudfiles.username", username, file=config_filename)
@@ -444,13 +448,13 @@ def request_rackspace_credentials():
 
 
 def request_s3_credentials():
-    print
-    print "Enter your Amazon S3 Credentials"
-    print
-    s3_bucket = raw_input("Bucket Name: ")
-    s3_key = raw_input("Access Key: ")
-    s3_secret = raw_input("Secret Key: ")
-    s3_profile_name = raw_input("Profile Name: ")
+    print()
+    print("Enter your Amazon S3 Credentials")
+    print()
+    s3_bucket = input("Bucket Name: ")
+    s3_key = input("Access Key: ")
+    s3_secret = input("Secret Key: ")
+    s3_profile_name = input("Profile Name: ")
 
     g().config("bigstore.backend", "s3", file=config_filename)
     g().config("bigstore.s3.bucket", s3_bucket, file=config_filename)
@@ -463,12 +467,12 @@ def request_s3_credentials():
 
 
 def request_google_cloud_storage_credentials():
-    print
-    print "Enter your Google Cloud Storage Credentials"
-    print
-    google_key = raw_input("Access Key: ")
-    google_secret = raw_input("Secret Key: ")
-    google_bucket = raw_input("Bucket Name: ")
+    print()
+    print("Enter your Google Cloud Storage Credentials")
+    print()
+    google_key = input("Access Key: ")
+    google_secret = input("Secret Key: ")
+    google_bucket = input("Bucket Name: ")
 
     g().config("bigstore.backend", "gs", file=config_filename)
     g().config("bigstore.gs.key", google_key, file=config_filename)
@@ -512,20 +516,20 @@ def log():
         else:
             line = u"({}) {}: {} \u2192 {}".format(sha[:6], formatted_date, backend, user)
 
-        print line
+        print(line)
 
 
 def init():
     try:
         g().config("bigstore.backend", file=config_filename)
     except git.exc.GitCommandError:
-        print "What backend would you like to store your files with?"
-        print "(1) Amazon S3"
-        print "(2) Google Cloud Storage"
-        print "(3) Rackspace Cloud Files"
+        print("What backend would you like to store your files with?")
+        print("(1) Amazon S3")
+        print("(2) Google Cloud Storage")
+        print("(3) Rackspace Cloud Files")
         choice = None
         while choice not in ["1", "2", "3"]:
-            choice = raw_input("Enter your choice here: ")
+            choice = input("Enter your choice here: ")
 
         if choice == "1":
             try:
@@ -547,7 +551,7 @@ def init():
                 profile_name_set = False
 
             if not keys_set and not profile_name_set:
-                print "Either the secret keys are not set or the profile name is not set"
+                print("Either the secret keys are not set or the profile name is not set")
                 request_s3_credentials()
         elif choice == "2":
             try:
@@ -565,7 +569,7 @@ def init():
                 request_rackspace_credentials()
 
     else:
-        print "Reading credentials from .bigstore configuration file."
+        print("Reading credentials from .bigstore configuration file.")
 
     try:
         g().fetch("origin", "refs/notes/bigstore:refs/notes/bigstore")
@@ -574,7 +578,7 @@ def init():
             g().notes("--ref=bigstore", "add", "HEAD", "-m", "bigstore")
         except git.exc.GitCommandError:
             # Occurs when notes already exist for this ref.
-            print "Bigstore has already been initialized."
+            print("Bigstore has already been initialized.")
 
     g().config("filter.bigstore.clean", "git-bigstore filter-clean")
     g().config("filter.bigstore.smudge", "git-bigstore filter-smudge")

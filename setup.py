@@ -36,6 +36,7 @@ classifiers = [
     "Operating System :: Unix",
     "Operating System :: MacOS :: MacOS X",
     "Programming Language :: Python :: 2.7",
+    "Programming Language :: Python :: 3",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Version Control",
     "Topic :: Utilities",
@@ -58,12 +59,12 @@ setup(
         'bin/git-bigstore',
     ],
     install_requires=[
-        'gitpython<2',
+        'gitpython<3',
         'boto',
         'boto3',
         'python-dateutil',
         'pytz',
-        'python-cloudfiles',
+        'python-cloudfiles;python_version<="2.7"',
     ],
 )
 
