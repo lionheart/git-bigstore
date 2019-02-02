@@ -9,7 +9,8 @@ technical details, check out the
 Requirements
 ------------
 
--  Python 2.7+
+-  Python 2.7+ for version < 2.0
+-  Python 3.5+ for version 2.0+
 -  An Amazon S3, Google Cloud Storage, or Rackspace Cloud account
 
 Configuration
@@ -17,9 +18,17 @@ Configuration
 
 First, install bigstore.
 
+For Python 3:
+
 ::
 
-    pip install git-bigstore
+    pip install git-bigstore>=2.0
+
+For Python 2:
+
+::
+
+    pip install git-bigstore<=2.0
 
 Finally, go to the directory root of your Git repo and initialize
 bigstore.
