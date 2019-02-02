@@ -10,7 +10,8 @@ git-bigstore is an extension to Git that helps you track big files. For technica
 Requirements
 ------------
 
-* Python 2.7+
+* Python 2.7+ for version < 2.0
+* Python 3.5+ for version 2.0+
 * An Amazon S3, Google Cloud Storage, or Rackspace Cloud account
 
 Configuration
@@ -18,7 +19,13 @@ Configuration
 
 First, install bigstore.
 
-    pip install git-bigstore
+For Python 3:
+
+    pip install git-bigstore>=2.0
+
+For Python 2:
+
+    pip install git-bigstore<=2.0
 
 Finally, go to the directory root of your Git repo and initialize bigstore.
 
