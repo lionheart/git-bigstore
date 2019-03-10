@@ -274,7 +274,7 @@ def push():
                 else:
                     if firstline == 'bigstore':
                         if not backend.exists(hexdigest):
-                            with open(object_filename(hash_function_name, hexdigest)) as file:
+                            with open(object_filename(hash_function_name, hexdigest), 'rb') as file:
                                 if compress:
                                     with tempfile.TemporaryFile() as compressed_file:
                                         compressor = bz2.BZ2Compressor()
@@ -392,6 +392,7 @@ def fetch(repository):
 
 
 def filter_clean():
+    # Operate on stdin/stdout in binary mode
     firstline = next(stdin)
     if firstline == b"bigstore\n":
         stdout.write(firstline)
@@ -419,6 +420,7 @@ def filter_clean():
 
 
 def filter_smudge():
+    # Operate on stdin/stdout in binary mode
     firstline = next(stdin)
     if firstline == b"bigstore\n":
         hash_function_name = next(stdin)
