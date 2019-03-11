@@ -17,7 +17,7 @@
 from __future__ import division
 from __future__ import print_function
 from builtins import input, object
-from future.utils import bytes_to_native_str, native_str_to_bytes
+from future.utils import bytes_to_native_str, native_str_to_bytes, iteritems
 
 from datetime import datetime
 import bz2
@@ -206,7 +206,7 @@ def pathnames():
         filenames[filename] = sha
 
     for wildcard, filter in filters:
-        for filename, sha in filenames.items():
+        for filename, sha in iteritems(filenames):
             if fnmatch.fnmatch(filename, wildcard):
                 yield sha, filename, filter == "bigstore-compress"
 
