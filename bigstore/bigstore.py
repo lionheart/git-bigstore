@@ -16,8 +16,9 @@
 
 from __future__ import division
 from __future__ import print_function
-from builtins import input
-from builtins import object
+from builtins import input, object
+from future.utils import bytes_to_native_str, native_str_to_bytes, iteritems
+
 from datetime import datetime
 import bz2
 import errno
@@ -38,6 +39,14 @@ from .backends import GoogleBackend
 from dateutil import tz as dateutil_tz
 import git
 import pytz
+
+# Use a bytes mode stdin/stdout for both Python 2 and 3.
+if sys.version_info >= (3,):
+    stdin = sys.stdin.buffer
+    stdout = sys.stdout.buffer
+else:
+    stdin = sys.stdin
+    stdout = sys.stdout
 
 attribute_regex = re.compile(r'^([^\s]*) filter=(bigstore(?:-compress)?)$')
 
@@ -197,7 +206,7 @@ def pathnames():
         filenames[filename] = sha
 
     for wildcard, filter in filters:
-        for filename, sha in filenames.items():
+        for filename, sha in iteritems(filenames):
             if fnmatch.fnmatch(filename, wildcard):
                 yield sha, filename, filter == "bigstore-compress"
 
@@ -265,7 +274,7 @@ def push():
                 else:
                     if firstline == 'bigstore':
                         if not backend.exists(hexdigest):
-                            with open(object_filename(hash_function_name, hexdigest)) as file:
+                            with open(object_filename(hash_function_name, hexdigest), 'rb') as file:
                                 if compress:
                                     with tempfile.TemporaryFile() as compressed_file:
                                         compressor = bz2.BZ2Compressor()
@@ -383,18 +392,19 @@ def fetch(repository):
 
 
 def filter_clean():
-    firstline = next(sys.stdin)
-    if firstline == "bigstore\n":
-        sys.stdout.write(firstline)
-        for line in sys.stdin:
-            sys.stdout.write(line)
+    # Operate on stdin/stdout in binary mode
+    firstline = next(stdin)
+    if firstline == b"bigstore\n":
+        stdout.write(firstline)
+        for line in stdin:
+            stdout.write(line)
     else:
-        file = tempfile.NamedTemporaryFile(mode='w+t', delete=False)
+        file = tempfile.NamedTemporaryFile(mode='w+b', delete=False)
         hash_function = default_hash_function()
         hash_function.update(firstline)
         file.write(firstline)
 
-        for line in sys.stdin:
+        for line in stdin:
             hash_function.update(line)
             file.write(line)
 
@@ -404,33 +414,35 @@ def filter_clean():
         mkdir_p(os.path.join(object_directory(default_hash_function_name), hexdigest[:2]))
         shutil.copy(file.name, object_filename(default_hash_function_name, hexdigest))
 
-        sys.stdout.write("bigstore\n")
-        sys.stdout.write("{}\n".format(default_hash_function_name))
-        sys.stdout.write("{}\n".format(hexdigest))
+        stdout.write(b"bigstore\n")
+        stdout.write(native_str_to_bytes("{}\n".format(default_hash_function_name)))
+        stdout.write(native_str_to_bytes("{}\n".format(hexdigest)))
 
 
 def filter_smudge():
-    firstline = next(sys.stdin)
-    if firstline == "bigstore\n":
-        hash_function_name = next(sys.stdin)
-        hexdigest = next(sys.stdin)
-        source_filename = object_filename(hash_function_name[:-1], hexdigest[:-1])
+    # Operate on stdin/stdout in binary mode
+    firstline = next(stdin)
+    if firstline == b"bigstore\n":
+        hash_function_name = next(stdin)
+        hexdigest = next(stdin)
+        source_filename = object_filename(bytes_to_native_str(hash_function_name)[:-1],
+                                          bytes_to_native_str(hexdigest)[:-1])
 
         try:
             with open(source_filename):
                 pass
         except IOError:
-            sys.stdout.write(firstline)
-            sys.stdout.write(hash_function_name)
-            sys.stdout.write(hexdigest)
+            stdout.write(firstline)
+            stdout.write(hash_function_name)
+            stdout.write(hexdigest)
         else:
             with open(source_filename, 'rb') as file:
                 for line in file:
-                    sys.stdout.write(line)
+                    stdout.write(line)
     else:
-        sys.stdout.write(firstline)
-        for line in sys.stdin:
-            sys.stdout.write(line)
+        stdout.write(firstline)
+        for line in stdin:
+            stdout.write(line)
 
 
 def request_rackspace_credentials():

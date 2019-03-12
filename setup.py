@@ -61,6 +61,7 @@ setup(
         'bin/git-bigstore',
     ],
     install_requires=[
+        'future',
         'gitpython<3',
         'boto',
         'boto3',
@@ -69,4 +70,3 @@ setup(
         'python-cloudfiles;python_version<="2.7"',
     ],
 )
-
