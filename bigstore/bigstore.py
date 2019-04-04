@@ -103,10 +103,7 @@ def default_backend():
 def backend_for_name(name):
     if name == 's3':
         bucket_name = config('bigstore.s3.bucket')
-        access_key_id = config('bigstore.s3.key')
-        secret_access_key = config('bigstore.s3.secret')
-        profile_name = config('bigstore.s3.profile-name')
-        return S3Backend(bucket_name, access_key_id, secret_access_key, profile_name)
+        return S3Backend(bucket_name)
     elif name == 'cloudfiles':
         username = config('bigstore.cloudfiles.username')
         api_key = config('bigstore.cloudfiles.key')
