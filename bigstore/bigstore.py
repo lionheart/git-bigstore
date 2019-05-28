@@ -103,10 +103,14 @@ def default_backend():
 def backend_for_name(name):
     if name == 's3':
         bucket_name = config('bigstore.s3.bucket')
-        access_key_id = config('bigstore.s3.key')
-        secret_access_key = config('bigstore.s3.secret')
-        profile_name = config('bigstore.s3.profile-name')
-        return S3Backend(bucket_name, access_key_id, secret_access_key, profile_name)
+        # Backward compatibility, but not suggested.
+        # If we don't have both key and secret, don't bother.
+        if config('bigstore.s3.key') and config('bigstore.s3.secret'):
+            os.environ["AWS_ACCESS_KEY_ID"] = config('bigstore.s3.key')
+            os.environ["AWS_SECRET_ACCESS_KEY"] = config('bigstore.s3.secret')
+        if config('bigstore.s3.profile-name'):
+            os.environ["AWS_PROFILE"] = config('bigstore.s3.profile-name')
+        return S3Backend(bucket_name)
     elif name == 'cloudfiles':
         username = config('bigstore.cloudfiles.username')
         api_key = config('bigstore.cloudfiles.key')
@@ -461,22 +465,11 @@ def request_rackspace_credentials():
 
 def request_s3_credentials():
     print()
-    print("Enter your Amazon S3 Credentials")
-    print()
+    print("Enter your Amazon S3 Bucket")
+    print("Credentials are now done by ENV Variables.\n")
     s3_bucket = input("Bucket Name: ")
-    s3_key = input("Access Key: ")
-    s3_secret = input("Secret Key: ")
-    s3_profile_name = input("Profile Name: ")
-
     g().config("bigstore.backend", "s3", file=config_filename)
     g().config("bigstore.s3.bucket", s3_bucket, file=config_filename)
-    if s3_key != '':
-        g().config("bigstore.s3.key", s3_key, file=config_filename)
-    if s3_secret != '':
-        g().config("bigstore.s3.secret", s3_secret, file=config_filename)
-    if s3_profile_name != '':
-        g().config("bigstore.s3.profile-name", s3_profile_name, file=config_filename)
-
 
 def request_google_cloud_storage_credentials():
     print()
@@ -544,26 +537,11 @@ def init():
             choice = input("Enter your choice here: ")
 
         if choice == "1":
+            print("""New Behavior: Use standard aws env variables for credentials or machine role.
+                   Assume-role is now supported in aws profiles.""")
             try:
                 g().config("bigstore.s3.bucket", file=config_filename)
             except git.exc.GitCommandError:
-                request_s3_credentials()
-
-            keys_set = True
-            try:
-                g().config("bigstore.s3.key", file=config_filename)
-                g().config("bigstore.s3.secret", file=config_filename)
-            except git.exc.GitCommandError:
-                keys_set = False
-
-            profile_name_set = True
-            try:
-                g().config("bigstore.s3.profile-name", file=config_filename)
-            except git.exc.GitCommandError:
-                profile_name_set = False
-
-            if not keys_set and not profile_name_set:
-                print("Either the secret keys are not set or the profile name is not set")
                 request_s3_credentials()
         elif choice == "2":
             try:
