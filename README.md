@@ -17,13 +17,13 @@ Requirements
 Configuration
 -------------
 
-First, install bigstore.
+First, install `git-bigstore` on PyPi.
 
-For Python 3:
+Python 3.5+:
 
     pip install git-bigstore>=2.0
 
-For Python 2:
+Python 2.7+:
 
     pip install git-bigstore<=2.0
 
@@ -31,7 +31,7 @@ Finally, go to the directory root of your Git repo and initialize bigstore.
 
     git bigstore init
 
-At this point, you will be prompted for which backend you would like to use (either S3, Google Storage, or Rackspace Cloudfiles) and your credentials. Once you've entered this information, your Git repository is now prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
+At this point, you will be prompted for which backend you would like to use (Amazon S3, Google Storage, or Rackspace Cloudfiles) and your credentials. Once you've entered this information, your Git repository will be prepared to track big files. If a ".bigstore" configuration file already exists in your repository, you will not be prompted for backend credentials.
 
 To specify filetypes to store remotely, add an entry to your .gitattributes. E.g., if you only want to store your big archive files in your backend, run this command in your repository root:
 
