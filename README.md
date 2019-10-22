@@ -37,7 +37,7 @@ To specify filetypes to store remotely, add an entry to your .gitattributes. E.g
 
     echo "*.zip filter=bigstore" > .gitattributes
 
-After you run this, every time you stage a zip file, it will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with relevant identifying information.
+After this, every time you stage a zip file, bigstore will transparently copy the file to ".git/bigstore/objects" and will replace the file contents (as stored in git) with relevant identifying information.
 
 If you're storing large text files (or something else that is easily compressable), specify the "bigstore-compress" filter instead of the normal "bigstore" one. E.g.,
 
